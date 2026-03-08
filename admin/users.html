@@ -151,8 +151,6 @@
 <script src="assets/admin.js"></script>
 <script>
   injectSidebar('users');
-  initPage();
-
   let currentPage = 1;
   let debounceTimer;
   function debounce(fn, delay) {
@@ -302,9 +300,11 @@
     </aside>`;
   }
 
-  loadUsers();
-  setupModalClose('editModal');
-  setupModalClose('createModal');
+  if (initPage()) {
+    loadUsers();
+    setupModalClose('editModal');
+    setupModalClose('createModal');
+  }
 </script>
 </body>
 </html>

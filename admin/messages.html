@@ -58,7 +58,6 @@
 <script src="assets/admin.js"></script>
 <script>
   document.getElementById('sc').innerHTML = sb('messages');
-  initPage();
   let currentPage = 1, debounceTimer;
   function debounce(fn,d){return function(...a){clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>fn(...a),d);}}
 
@@ -111,7 +110,9 @@
     return `<aside class="sidebar"><div class="sidebar-logo"><div class="icon"><i class="fas fa-shield-halved"></i></div><div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div></div><nav style="flex:1;overflow-y:auto"><div class="nav-section"><div class="nav-section-label">Navigation</div>${items.map(([id,icon,label,href])=>`<a href="${href}" class="nav-item ${a===id?'active':''}" ><i class="fas ${icon} icon"></i> ${label}</a>`).join('')}<a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a></div></nav><div class="sidebar-footer"><div class="sidebar-user" onclick="logout()"><div class="sidebar-avatar" id="sidebar-avatar">AD</div><div class="sidebar-user-info"><div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div><div class="role" id="sidebar-user-role">superadmin</div></div><i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i></div></div></aside>`;
   }
 
-  loadMessages();
+  if (initPage()) {
+    loadMessages();
+  }
 </script>
 </body>
 </html>

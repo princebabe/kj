@@ -53,10 +53,6 @@ if (process.env.NODE_ENV !== 'test') {
 // ─── General rate limit ───────────────────────────────────────────────────────
 app.use('/api/', generalLimiter);
 
-// ─── Static files (frontend) ──────────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, '..'), { index: 'index.html' }));
-app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
-
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth',    authRoutes);
 app.use('/api/emails',  emailRoutes);
@@ -69,9 +65,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── Static files (frontend) ──────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '..'), { index: 'index.html' }));
+app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
+
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  if (req.path.startsWith('/api/')) {
+  if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Route not found' });
   }
   // SPA fallback

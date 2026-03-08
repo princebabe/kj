@@ -165,8 +165,6 @@
       </div>
     </aside>`;
 
-  initPage();
-
   async function loadDashboard() {
     try {
       const d = await GET('/api/admin/dashboard');
@@ -255,8 +253,10 @@
       </tr>`).join('');
   }
 
-  loadDashboard();
-  setInterval(loadDashboard, 60000); // auto-refresh every 60s
+  if (initPage()) {
+    loadDashboard();
+    setInterval(loadDashboard, 60000); // auto-refresh every 60s
+  }
 </script>
 
 <style>

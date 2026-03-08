@@ -258,6 +258,7 @@ function drawBarChart(canvas, data, label) {
 
 // ─── Init page ─────────────────────────────────────────────────────────────────
 function initPage() {
-  if (!requireAuth()) return;
+  if (!requireAuth()) return false;
   initSidebar();
+  return true;
 }

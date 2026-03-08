@@ -87,7 +87,12 @@
             password: document.getElementById('password').value,
           })
         });
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error('Server returned an unexpected response. Please ensure the backend is running.');
+        }
 
         if (!res.ok) throw new Error(data.error || 'Login failed');
         if (!['admin','superadmin'].includes(data.user.role)) {
