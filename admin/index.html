@@ -21,6 +21,10 @@
       <h2 class="login-title">Admin Panel</h2>
       <p class="login-sub">Sign in with your administrator credentials</p>
 
+      <div id="backendWarning" style="display:none;margin-bottom:16px;padding:10px 12px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.4);border-radius:8px;font-size:12.5px;color:#fbbf24;line-height:1.6">
+        <i class="fas fa-triangle-exclamation"></i> <span id="backendWarningMsg"></span>
+      </div>
+
       <form id="loginForm">
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
@@ -70,6 +74,41 @@
       window.location.href = 'dashboard.html';
     }
 
+    // ── Backend health check on page load ──────────────────────────────────────
+    (async function checkBackend() {
+      try {
+        const healthResponse = await fetch('/api/health', { method: 'GET' });
+        const contentType = healthResponse.headers.get('content-type') || '';
+        if (!healthResponse.ok || !contentType.includes('application/json')) {
+          showBackendWarning('Backend API is not responding correctly. Ensure the Node.js server is running.');
+        }
+      } catch {
+        showBackendWarning('Cannot reach the backend API. Ensure the Node.js server is running and this page is served through it.');
+      }
+    })();
+
+    function showBackendWarning(msg) {
+      const warningElement = document.getElementById('backendWarning');
+      document.getElementById('backendWarningMsg').textContent = msg;
+      warningElement.style.display = 'block';
+    }
+
+    // ── Helper: safe JSON parse with status context ────────────────────────────
+    async function safeJson(res) {
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        const ct = res.headers.get('content-type') || 'unknown';
+        const preview = text.substring(0, 80).replace(/\s+/g, ' ').trim();
+        throw new Error(
+          `Server returned a non-JSON response (HTTP ${res.status}, ${ct}).` +
+          (preview ? ` Got: "${preview}…"` : '') +
+          ' Ensure the Node.js backend is running and this page is loaded through it.'
+        );
+      }
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('loginBtn');
@@ -87,12 +126,7 @@
             password: document.getElementById('password').value,
           })
         });
-        let data;
-        try {
-          data = await res.json();
-        } catch {
-          throw new Error('Server returned an unexpected response. Please ensure the backend is running.');
-        }
+        const data = await safeJson(res);
 
         if (!res.ok) throw new Error(data.error || 'Login failed');
         if (!['admin','superadmin'].includes(data.user.role)) {

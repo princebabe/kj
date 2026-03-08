@@ -81,9 +81,11 @@ app.use((req, res) => {
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
   console.error(err);
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-  });
+  res.status(err.status || 500)
+    .set('Content-Type', 'application/json')
+    .end(JSON.stringify({
+      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    }));
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
