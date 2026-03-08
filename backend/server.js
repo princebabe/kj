@@ -61,9 +61,11 @@ app.use('/api/admin',   adminRoutes);
 app.use('/api/v1',      apiRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Accepts GET and POST so the frontend can verify POST is not blocked by a proxy.
+app.route('/api/health')
+  .get( (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
+  .post((_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
+  .all( (_req, res) => res.status(405).set('Allow', 'GET, POST').json({ error: 'Method not allowed' }));
 
 // ─── Static files (frontend) ──────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..'), { index: 'index.html' }));

@@ -81,6 +81,17 @@
         const contentType = healthResponse.headers.get('content-type') || '';
         if (!healthResponse.ok || !contentType.includes('application/json')) {
           showBackendWarning('Backend API is not responding correctly. Ensure the Node.js server is running.');
+          return;
+        }
+        // Also verify POST is not blocked — some proxies allow GET but reject POST.
+        // POST /api/health returns 200 JSON when Express is handling it.
+        const postCheck = await fetch('/api/health', { method: 'POST' });
+        if (postCheck.status === 405) {
+          showBackendWarning(
+            'A proxy or web server is blocking POST requests to the API (HTTP 405). ' +
+            'Ensure Nginx/Apache is configured to proxy all HTTP methods to the Node.js backend, ' +
+            'not just serve static files.'
+          );
         }
       } catch {
         showBackendWarning('Cannot reach the backend API. Ensure the Node.js server is running and this page is served through it.');
@@ -100,6 +111,17 @@
         return JSON.parse(text);
       } catch {
         const ct = res.headers.get('content-type') || 'unknown';
+        if (res.status === 405) {
+          // 405 from a proxy/static server means POST requests are being blocked
+          showBackendWarning(
+            'A proxy or web server is blocking POST requests to the API (HTTP 405 Method Not Allowed). ' +
+            'Ensure Nginx/Apache is configured to proxy all HTTP methods to the Node.js backend.'
+          );
+          throw new Error(
+            'HTTP 405 Method Not Allowed — a proxy is rejecting POST requests. ' +
+            'See the warning above for details.'
+          );
+        }
         const preview = text.substring(0, 80).replace(/\s+/g, ' ').trim();
         throw new Error(
           `Server returned a non-JSON response (HTTP ${res.status}, ${ct}).` +
