@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TempMail Pro – Admin Login</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(108,99,245,.35) 0%, transparent 60%), var(--bg); }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="icon"><i class="fas fa-shield-halved"></i></div>
+        <span style="font-size:22px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent">TempMail Pro</span>
+      </div>
+      <h2 class="login-title">Admin Panel</h2>
+      <p class="login-sub">Sign in with your administrator credentials</p>
+
+      <div id="backendWarning" style="display:none;margin-bottom:16px;padding:10px 12px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.4);border-radius:8px;font-size:12.5px;color:#fbbf24;line-height:1.6">
+        <i class="fas fa-triangle-exclamation"></i> <span id="backendWarningMsg"></span>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="search-wrap">
+            <i class="fas fa-envelope"></i>
+            <input class="form-control" id="email" type="email" placeholder="admin@tempmailpro.local" required style="padding-left:36px" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="search-wrap">
+            <i class="fas fa-lock"></i>
+            <input class="form-control" id="password" type="password" placeholder="••••••••" required style="padding-left:36px" />
+          </div>
+        </div>
+        <div id="errorMsg" style="display:none;color:#f87171;font-size:13px;margin-bottom:12px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.2)"></div>
+        <button type="submit" class="btn btn-primary w-full" id="loginBtn" style="width:100%;padding:12px;font-size:15px">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <div id="devCredentials" style="display:none;margin-top:16px;padding:12px 14px;background:rgba(108,99,245,0.08);border:1px solid rgba(108,99,245,0.25);border-radius:10px;font-size:12.5px;color:var(--text2);line-height:1.7">
+        <strong style="color:var(--text);display:block;margin-bottom:4px"><i class="fas fa-info-circle" style="color:#6c63f5"></i> Default credentials</strong>
+        <span><b>Email:</b> admin@tempmailpro.local</span><br/>
+        <span><b>Password:</b> Admin@1234!</span><br/>
+        <span style="font-size:11px;opacity:.75">(Set via <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> in <code>.env</code>, then run <code>node seed.js</code>)</span>
+      </div>
+
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+        <a href="/" style="color:var(--text2);font-size:13px;text-decoration:none;hover:color:var(--text)">
+          <i class="fas fa-arrow-left" style="font-size:11px"></i> Back to TempMail Pro
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/admin.js"></script>
+  <script>
+    // Show default credentials hint only on localhost (development)
+    const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    if (isLocalhost) {
+      document.getElementById('devCredentials').style.display = 'block';
+    }
+
+    // If already logged in as admin, redirect to dashboard
+    if (getToken() && getUser() && ['admin','superadmin'].includes(getUser().role)) {
+      window.location.href = 'dashboard.html';
+    }
+
+    // ── Backend health check on page load ──────────────────────────────────────
+    (async function checkBackend() {
+      try {
+        const healthResponse = await fetch('/api/health', { method: 'GET' });
+        const contentType = healthResponse.headers.get('content-type') || '';
+        if (!healthResponse.ok || !contentType.includes('application/json')) {
+          showBackendWarning('Backend API is not responding correctly. Ensure the Node.js server is running.');
+          return;
+        }
+        // Also verify POST is not blocked — some proxies allow GET but reject POST.
+        // POST /api/health returns 200 JSON when Express is handling it.
+        const postCheck = await fetch('/api/health', { method: 'POST' });
+        if (postCheck.status === 405) {
+          showBackendWarning(
+            'A proxy or web server is blocking POST requests to the API (HTTP 405). ' +
+            'Ensure Nginx/Apache is configured to proxy all HTTP methods to the Node.js backend, ' +
+            'not just serve static files.'
+          );
+        }
+      } catch {
+        showBackendWarning('Cannot reach the backend API. Ensure the Node.js server is running and this page is served through it.');
+      }
+    })();
+
+    function showBackendWarning(msg) {
+      const warningElement = document.getElementById('backendWarning');
+      document.getElementById('backendWarningMsg').textContent = msg;
+      warningElement.style.display = 'block';
+    }
+
+    // ── Helper: safe JSON parse with status context ────────────────────────────
+    async function safeJson(res) {
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        const ct = res.headers.get('content-type') || 'unknown';
+        if (res.status === 405) {
+          // 405 from a proxy/static server means POST requests are being blocked
+          showBackendWarning(
+            'A proxy or web server is blocking POST requests to the API (HTTP 405 Method Not Allowed). ' +
+            'Ensure Nginx/Apache is configured to proxy all HTTP methods to the Node.js backend.'
+          );
+          throw new Error(
+            'HTTP 405 Method Not Allowed — a proxy is rejecting POST requests. ' +
+            'See the warning above for details.'
+          );
+        }
+        const preview = text.substring(0, 80).replace(/\s+/g, ' ').trim();
+        throw new Error(
+          `Server returned a non-JSON response (HTTP ${res.status}, ${ct}).` +
+          (preview ? ` Got: "${preview}…"` : '') +
+          ' Ensure the Node.js backend is running and this page is loaded through it.'
+        );
+      }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('errorMsg');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+      err.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('email').value,
+            password: document.getElementById('password').value,
+          })
+        });
+        const data = await safeJson(res);
+
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        if (!['admin','superadmin'].includes(data.user.role)) {
+          throw new Error('Access denied: administrator role required');
+        }
+
+        setToken(data.token);
+        setUser(data.user);
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        err.textContent = error.message;
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

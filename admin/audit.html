@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audit Log – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sc"></div>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>Audit Log</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" onclick="loadAudit()">
+          <i class="fas fa-arrows-rotate"></i> Refresh
+        </button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px">
+          <div class="flex-between" style="gap:12px;flex-wrap:wrap">
+            <div class="search-wrap" style="flex:1;min-width:200px">
+              <i class="fas fa-magnifying-glass"></i>
+              <input class="form-control" id="actionFilter" placeholder="Filter by action (e.g. login, delete_user)…" oninput="debounce(loadAudit,400)()" style="padding-left:36px" />
+            </div>
+            <span id="totalCount" class="badge badge-brand">0 entries</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-scroll text-brand"></i> Activity Log</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Action</th><th>User</th><th>Target</th><th>Detail</th><th>IP</th><th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="auditBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/admin.js"></script>
+<script>
+  document.getElementById('sc').innerHTML = sb('audit');
+  let currentPage = 1, debounceTimer;
+  function debounce(fn,d){return function(...a){clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>fn(...a),d);}}
+
+  const actionColors = {
+    login:          'rgba(16,185,129,0.2)',
+    register:       'rgba(59,130,246,0.2)',
+    logout:         'rgba(107,114,128,0.2)',
+    delete_user:    'rgba(239,68,68,0.2)',
+    delete_email:   'rgba(239,68,68,0.2)',
+    delete_message: 'rgba(239,68,68,0.2)',
+    ban:            'rgba(239,68,68,0.2)',
+    generate_email: 'rgba(108,99,245,0.2)',
+    broadcast:      'rgba(245,158,11,0.2)',
+    update_settings:'rgba(168,85,247,0.2)',
+  };
+  const actionIcons = {
+    login:          'fa-sign-in-alt',
+    register:       'fa-user-plus',
+    delete_user:    'fa-user-minus',
+    delete_email:   'fa-trash',
+    generate_email: 'fa-envelope',
+    broadcast:      'fa-bullhorn',
+    update_settings:'fa-gear',
+    add_domain:     'fa-globe',
+    delete_domain:  'fa-globe',
+    change_password:'fa-lock',
+  };
+
+  async function loadAudit(page = currentPage) {
+    currentPage = page;
+    const action = document.getElementById('actionFilter').value;
+    const params = new URLSearchParams({ page, limit:50, action });
+    try {
+      const d = await GET(`/api/admin/audit?${params}`);
+      document.getElementById('totalCount').textContent = d.total + ' entries';
+      const tbody = document.getElementById('auditBody');
+      if (!d.logs.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px">No log entries found</td></tr>';
+      } else {
+        tbody.innerHTML = d.logs.map(l => {
+          const color = actionColors[l.action] || 'rgba(108,99,245,0.1)';
+          const icon  = actionIcons[l.action]  || 'fa-circle-info';
+          return `
+          <tr>
+            <td>${l.id}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:28px;height:28px;border-radius:7px;background:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <i class="fas ${icon}" style="font-size:11px;color:#a78bfa"></i>
+                </div>
+                <span style="font-weight:500;color:var(--text)">${l.action.replace(/_/g,' ')}</span>
+              </div>
+            </td>
+            <td class="text-muted">${l.user_email || '—'}</td>
+            <td class="text-muted">${l.target_type ? `${l.target_type} #${l.target_id}` : '—'}</td>
+            <td class="text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.detail || '—'}</td>
+            <td class="monospace text-muted">${l.ip || '—'}</td>
+            <td class="text-muted">${fmtDateTime(l.created_at)}</td>
+          </tr>`;}).join('');
+      }
+      const pEl = document.getElementById('pagination');
+      pEl.innerHTML = '';
+      pEl.appendChild(buildPagination(page, d.total, 50, loadAudit));
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+  }
+
+  function sb(a) {
+    const items = [['dashboard','fa-chart-pie','Dashboard','dashboard.html'],['users','fa-users','Users','users.html'],['emails','fa-envelope','Temp Emails','emails.html'],['messages','fa-inbox','Messages','messages.html'],['domains','fa-globe','Domains','domains.html'],['settings','fa-gear','Settings','settings.html'],['audit','fa-scroll','Audit Log','audit.html']];
+    return `<aside class="sidebar"><div class="sidebar-logo"><div class="icon"><i class="fas fa-shield-halved"></i></div><div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div></div><nav style="flex:1;overflow-y:auto"><div class="nav-section"><div class="nav-section-label">Navigation</div>${items.map(([id,icon,label,href])=>`<a href="${href}" class="nav-item ${a===id?'active':''}" ><i class="fas ${icon} icon"></i> ${label}</a>`).join('')}<a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a></div></nav><div class="sidebar-footer"><div class="sidebar-user" onclick="logout()"><div class="sidebar-avatar" id="sidebar-avatar">AD</div><div class="sidebar-user-info"><div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div><div class="role" id="sidebar-user-role">superadmin</div></div><i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i></div></div></aside>`;
+  }
+
+  if (initPage()) {
+    loadAudit();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TempMail Pro – Free Temporary Email Address | Disposable Inbox</title>
+  <meta name="description" content="Get a free, instant temporary email address. Protect your privacy, avoid spam, and stay anonymous online with TempMail Pro – the premium disposable email service." />
+  <meta name="keywords" content="temp mail, temporary email, disposable email, fake email, throwaway email, anonymous email" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="TempMail Pro – Free Temporary Email" />
+  <meta property="og:description" content="Generate instant disposable email addresses. No registration required." />
+  <meta property="og:type" content="website" />
+  <!-- Tailwind CSS (local build) -->
+  <link rel="stylesheet" href="assets/css/tailwind.css" />
+  <!-- Font Awesome 7 (local) -->
+  <link rel="stylesheet" href="assets/css/fontawesome.min.css" />
+  <!-- QR Code Library (local bundle) -->
+  <script src="assets/js/qrcode.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    :root {
+      --grad-start: #6c63f5;
+      --grad-mid: #a855f7;
+      --grad-end: #3b82f6;
+    }
+    body { background: #0f0e1a; color: #e2e0ff; overflow-x: hidden; }
+    .glass {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .glass-light {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .grad-text {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .grad-btn {
+      background: linear-gradient(135deg, #6c63f5, #a855f7, #3b82f6);
+      background-size: 200% 200%;
+      transition: background-position 0.5s, transform 0.2s, box-shadow 0.2s;
+    }
+    .grad-btn:hover {
+      background-position: right center;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(108,99,245,0.5);
+    }
+    .hero-bg {
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,99,245,0.35) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 80% 20%, rgba(168,85,247,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse 40% 30% at 20% 80%, rgba(59,130,246,0.2) 0%, transparent 60%),
+                  #0f0e1a;
+    }
+    .card-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s;
+    }
+    .card-3d:hover {
+      transform: perspective(800px) rotateX(-4deg) rotateY(4deg) translateY(-6px);
+      box-shadow: 0 25px 50px rgba(108,99,245,0.3), 0 0 0 1px rgba(108,99,245,0.2);
+    }
+    .email-box {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(108,99,245,0.5);
+      box-shadow: 0 0 30px rgba(108,99,245,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .email-box:hover {
+      border-color: rgba(168,85,247,0.7);
+      box-shadow: 0 0 40px rgba(108,99,245,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .inbox-item { transition: background 0.2s, border-color 0.2s; }
+    .inbox-item:hover, .inbox-item.active {
+      background: rgba(108,99,245,0.15);
+      border-color: rgba(108,99,245,0.5);
+    }
+    .stat-card { position: relative; overflow: hidden; }
+    .stat-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(108,99,245,0.15), rgba(168,85,247,0.08));
+      z-index: 0;
+    }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .faq-answer.open { max-height: 500px; }
+    .ad-placeholder {
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(108,99,245,0.05),
+        rgba(108,99,245,0.05) 10px,
+        rgba(168,85,247,0.03) 10px,
+        rgba(168,85,247,0.03) 20px
+      );
+      border: 2px dashed rgba(108,99,245,0.3);
+    }
+    .typing-cursor::after {
+      content: '|';
+      animation: blink 1s step-end infinite;
+      color: #a78bfa;
+    }
+    @keyframes blink { '0%,100%': {opacity:1}; '50%': {opacity:0}; }
+    @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0} }
+    .refresh-spin { animation: spin 1s linear; }
+    @keyframes spin { from {transform:rotate(0deg)} to {transform:rotate(360deg)} }
+    .notification {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: linear-gradient(135deg,#6c63f5,#a855f7);
+      color: white; padding: 12px 20px; border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(108,99,245,0.5);
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .notification.show { transform: translateY(0); opacity: 1; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .modal-overlay.open .modal-box { transform: scale(1); }
+    .shimmer {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% {background-position:200% 0} 100% {background-position:-200% 0} }
+    .feature-icon {
+      background: linear-gradient(135deg, rgba(108,99,245,0.2), rgba(168,85,247,0.15));
+      border: 1px solid rgba(108,99,245,0.3);
+    }
+    .glow { box-shadow: 0 0 20px rgba(108,99,245,0.4), 0 0 40px rgba(108,99,245,0.2); }
+    .nav-blur {
+      background: rgba(15,14,26,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .timer-bar {
+      height: 3px;
+      background: linear-gradient(90deg, #6c63f5, #a855f7, #3b82f6);
+      animation: timerAnim 30s linear infinite;
+    }
+    @keyframes timerAnim {
+      0% {width:100%} 100% {width:0%}
+    }
+    .domain-badge {
+      background: rgba(108,99,245,0.15);
+      border: 1px solid rgba(108,99,245,0.3);
+      transition: all 0.2s;
+    }
+    .domain-badge:hover {
+      background: rgba(108,99,245,0.3);
+      border-color: rgba(168,85,247,0.5);
+      transform: translateY(-2px);
+    }
+    .blog-card { transition: transform 0.3s, box-shadow 0.3s; }
+    .blog-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(108,99,245,0.25); }
+    .star-filled { color: #f59e0b; }
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 2px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(108,99,245,0.5); border-radius: 2px; }
+    @media (max-width: 768px) { .sidebar-ad { display: none; } }
+    .particle {
+      position: absolute; border-radius: 50%;
+      background: rgba(108,99,245,0.4);
+      pointer-events: none; animation: floatParticle linear infinite;
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+    .copy-flash { animation: copyFlash 0.3s ease-out; }
+    @keyframes copyFlash { 0%,100% {background:transparent} 50% {background:rgba(108,99,245,0.3)} }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+
+<!-- ===== NOTIFICATION TOAST ===== -->
+<div id="toast" class="notification flex items-center gap-3">
+  <i id="toastIcon" class="fas fa-circle-check text-lg"></i>
+  <span id="toastMsg">Copied to clipboard!</span>
+</div>
+
+<!-- ===== QR CODE MODAL ===== -->
+<div id="qrModal" class="modal-overlay" onclick="closeModal('qrModal')">
+  <div class="modal-box glass rounded-3xl p-8 max-w-xs w-full mx-4" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold grad-text">QR Code</h3>
+      <button onclick="closeModal('qrModal')" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-xmark text-xl"></i>
+      </button>
+    </div>
+    <div id="qrCode" class="flex justify-center mb-4 bg-white p-4 rounded-2xl"></div>
+    <p class="text-center text-sm text-gray-400">Scan to use this email address</p>
+    <p id="qrEmailLabel" class="text-center text-xs text-brand-400 mt-1 break-all"></p>
+  </div>
+</div>
+
+<!-- ===== CHANGE USERNAME MODAL ===== -->
+<div id="usernameModal" class="modal-overlay" onclick="closeModal('usernameModal')">
+  <div class="modal-box glass rounded-3xl p-8 max-w-sm w-full mx-4" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold grad-text">Change Username</h3>
+      <button onclick="closeModal('usernameModal')" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-xmark text-xl"></i>
+      </button>
+    </div>
+    <div class="mb-4">
+      <label class="text-sm text-gray-400 mb-2 block">Custom Username</label>
+      <div class="flex gap-2">
+        <input id="customUsername" type="text" placeholder="yourname"
+          class="flex-1 bg-white/5 border border-brand-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400 transition-colors" />
+        <select id="domainSelect"
+          class="bg-white/5 border border-brand-500/30 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-brand-400 transition-colors">
+          <option value="tempmail.pro">@tempmail.pro</option>
+          <option value="guerrillamail.com">@guerrillamail.com</option>
+          <option value="mailnull.com">@mailnull.com</option>
+          <option value="sharklasers.com">@sharklasers.com</option>
+          <option value="spamgourmet.com">@spamgourmet.com</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="applyUsername()" class="grad-btn w-full py-3 rounded-xl text-white font-semibold">
+      Apply Username
+    </button>
+  </div>
+</div>
+
+<!-- ===== HISTORY MODAL ===== -->
+<div id="historyModal" class="modal-overlay" onclick="closeModal('historyModal')">
+  <div class="modal-box glass rounded-3xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold grad-text">Email History</h3>
+      <button onclick="closeModal('historyModal')" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-xmark text-xl"></i>
+      </button>
+    </div>
+    <div id="historyList" class="space-y-3 max-h-72 overflow-y-auto scrollbar-thin"></div>
+    <p class="text-center text-sm text-gray-500 mt-4">Last 10 generated addresses</p>
+  </div>
+</div>
+
+<!-- ===== TOP BANNER AD ===== -->
+<div class="ad-placeholder rounded-xl mx-4 mt-2 mb-0 flex items-center justify-center py-4 text-gray-500 text-sm">
+  <i class="fas fa-rectangle-ad mr-2 text-brand-500/50 text-lg"></i>
+  Top Banner Advertisement (728×90)
+</div>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar" class="sticky top-0 z-50 transition-all duration-300">
+  <div class="nav-blur">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl grad-btn flex items-center justify-center glow">
+            <i class="fas fa-envelope-open-text text-white text-sm"></i>
+          </div>
+          <span class="text-xl font-black grad-text tracking-tight">TempMail<span class="text-white">Pro</span></span>
+        </div>
+        <!-- Nav Links (desktop) -->
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
+          <a href="#inbox" class="hover:text-white transition-colors">Inbox</a>
+          <a href="#features" class="hover:text-white transition-colors">Features</a>
+          <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+          <a href="#blog" class="hover:text-white transition-colors">Blog</a>
+        </div>
+        <!-- Auth Buttons -->
+        <div class="flex items-center gap-3">
+          <button onclick="showToast('Login feature coming soon!','fa-info-circle')" class="hidden sm:block text-sm text-gray-300 hover:text-white px-4 py-2 rounded-xl border border-white/10 hover:border-brand-500/50 transition-all">
+            Log In
+          </button>
+          <button onclick="showToast('Sign Up feature coming soon!','fa-info-circle')" class="grad-btn text-sm text-white px-4 py-2 rounded-xl font-semibold">
+            Sign Up
+          </button>
+          <button id="darkToggle" onclick="toggleDark()" class="text-gray-400 hover:text-white ml-1 transition-colors">
+            <i class="fas fa-moon text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero-bg relative py-20 lg:py-28 overflow-hidden" id="hero">
+  <!-- Floating particles -->
+  <div id="particles"></div>
+  <!-- Decorative blobs -->
+  <div class="absolute top-20 left-10 w-72 h-72 bg-brand-600/20 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm text-brand-300 mb-6 animate-pulse-slow">
+      <div class="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+      <span>100% Free · No Registration Required · Instant Access</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black leading-tight mb-6 tracking-tight">
+      Get Your Free
+      <span class="grad-text block mt-1">Temporary Email</span>
+      <span class="text-white text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 block">Address Instantly</span>
+    </h1>
+    <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+      Protect your real inbox. Generate disposable email addresses in one click. No spam. No tracking. No hassle.
+    </p>
+
+    <!-- Email Generator Box -->
+    <div class="glass rounded-3xl p-6 sm:p-8 max-w-3xl mx-auto email-box transition-all duration-300">
+      <!-- Auto-refresh timer bar -->
+      <div class="flex items-center justify-between mb-3 text-xs text-gray-500">
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-clock text-brand-400"></i> Auto-refresh in <span id="timerCount" class="text-brand-300 font-semibold">30s</span>
+        </span>
+        <span class="flex items-center gap-1.5">
+          <div class="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+          Live inbox
+        </span>
+      </div>
+      <div class="w-full bg-white/5 rounded-full mb-5 overflow-hidden">
+        <div class="timer-bar rounded-full"></div>
+      </div>
+
+      <!-- Email Display -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
+        <div id="emailDisplay" class="flex-1 bg-black/20 rounded-2xl px-5 py-4 text-left flex items-center gap-3 border border-brand-500/20">
+          <i class="fas fa-envelope text-brand-400 text-lg shrink-0"></i>
+          <span id="currentEmail" class="text-white font-mono text-sm sm:text-base font-semibold break-all typing-cursor">
+            Loading...
+          </span>
+        </div>
+        <button id="copyBtn" onclick="copyEmail()" class="grad-btn rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-center gap-2 whitespace-nowrap sm:w-auto w-full">
+          <i class="fas fa-copy"></i>
+          <span>Copy</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <button onclick="refreshEmail()" class="flex items-center gap-2 glass-light rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:border-brand-500/50 transition-all">
+          <i id="refreshIcon" class="fas fa-rotate-right text-brand-400"></i>
+          Refresh
+        </button>
+        <button onclick="openModal('usernameModal')" class="flex items-center gap-2 glass-light rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:border-brand-500/50 transition-all">
+          <i class="fas fa-user-pen text-purple-400"></i>
+          Change Name
+        </button>
+        <button onclick="showQR()" class="flex items-center gap-2 glass-light rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:border-brand-500/50 transition-all">
+          <i class="fas fa-qrcode text-blue-400"></i>
+          QR Code
+        </button>
+        <button onclick="deleteInbox()" class="flex items-center gap-2 glass-light rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:border-brand-500/50 transition-all">
+          <i class="fas fa-trash text-red-400"></i>
+          Delete
+        </button>
+        <button onclick="openModal('historyModal');loadHistory()" class="flex items-center gap-2 glass-light rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:border-brand-500/50 transition-all">
+          <i class="fas fa-clock-rotate-left text-green-400"></i>
+          History
+        </button>
+      </div>
+
+      <!-- Domain Badges -->
+      <div class="mt-5 flex flex-wrap justify-center gap-2">
+        <span class="text-xs text-gray-500 self-center">Domains:</span>
+        <span class="domain-badge text-xs text-brand-300 px-3 py-1 rounded-full cursor-pointer" onclick="changeDomain('tempmail.pro')">@tempmail.pro</span>
+        <span class="domain-badge text-xs text-brand-300 px-3 py-1 rounded-full cursor-pointer" onclick="changeDomain('mailnull.com')">@mailnull.com</span>
+        <span class="domain-badge text-xs text-brand-300 px-3 py-1 rounded-full cursor-pointer" onclick="changeDomain('sharklasers.com')">@sharklasers.com</span>
+        <span class="domain-badge text-xs text-brand-300 px-3 py-1 rounded-full cursor-pointer" onclick="changeDomain('spamgourmet.com')">@spamgourmet.com</span>
+      </div>
+    </div>
+
+    <!-- Trust Indicators -->
+    <div class="flex flex-wrap justify-center gap-6 mt-8 text-sm text-gray-500">
+      <span class="flex items-center gap-1.5"><i class="fas fa-shield-halved text-green-400"></i> Privacy Protected</span>
+      <span class="flex items-center gap-1.5"><i class="fas fa-bolt text-yellow-400"></i> Instant Generation</span>
+      <span class="flex items-center gap-1.5"><i class="fas fa-ban text-red-400"></i> Zero Spam</span>
+      <span class="flex items-center gap-1.5"><i class="fas fa-infinity text-brand-400"></i> Unlimited Use</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS SECTION ===== -->
+<section class="py-16 relative">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div class="stat-card glass rounded-2xl p-6 text-center card-3d">
+        <div class="relative z-10">
+          <div class="text-3xl sm:text-4xl font-black grad-text mb-1" data-count="50000000" data-suffix="M+">0</div>
+          <div class="text-sm text-gray-400 mt-1">Emails Generated</div>
+          <i class="fas fa-envelope-open text-brand-500/30 text-4xl absolute bottom-4 right-4 pointer-events-none"></i>
+        </div>
+      </div>
+      <div class="stat-card glass rounded-2xl p-6 text-center card-3d">
+        <div class="relative z-10">
+          <div class="text-3xl sm:text-4xl font-black grad-text mb-1" data-count="120000000" data-suffix="M+">0</div>
+          <div class="text-sm text-gray-400 mt-1">Messages Received</div>
+          <i class="fas fa-inbox text-purple-500/30 text-4xl absolute bottom-4 right-4 pointer-events-none"></i>
+        </div>
+      </div>
+      <div class="stat-card glass rounded-2xl p-6 text-center card-3d">
+        <div class="relative z-10">
+          <div class="text-3xl sm:text-4xl font-black grad-text mb-1" data-count="3200000" data-suffix="M+">0</div>
+          <div class="text-sm text-gray-400 mt-1">Active Users</div>
+          <i class="fas fa-users text-blue-500/30 text-4xl absolute bottom-4 right-4 pointer-events-none"></i>
+        </div>
+      </div>
+      <div class="stat-card glass rounded-2xl p-6 text-center card-3d">
+        <div class="relative z-10">
+          <div class="text-3xl sm:text-4xl font-black grad-text mb-1" data-count="25" data-suffix="+">0</div>
+          <div class="text-sm text-gray-400 mt-1">Domains Available</div>
+          <i class="fas fa-globe text-green-500/30 text-4xl absolute bottom-4 right-4 pointer-events-none"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== INBOX DASHBOARD ===== -->
+<section id="inbox" class="py-10 lg:py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <!-- Sidebar ads + main content -->
+    <div class="flex gap-6">
+      <!-- Left Sidebar Ad -->
+      <div class="sidebar-ad w-36 shrink-0">
+        <div class="ad-placeholder rounded-xl h-96 flex flex-col items-center justify-center text-gray-500 text-xs text-center p-2 sticky top-20">
+          <i class="fas fa-rectangle-ad text-brand-500/40 text-3xl mb-2"></i>
+          <span>Left Banner<br/>Ad (160×600)</span>
+        </div>
+      </div>
+
+      <!-- Main Inbox -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white">Your Inbox</h2>
+            <p class="text-sm text-gray-500 mt-0.5">Real-time email updates • <span id="emailCountLabel">0 messages</span></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleSpam()" id="spamBtn" class="flex items-center gap-1.5 text-xs glass-light px-3 py-2 rounded-xl text-gray-400 hover:text-white transition-all">
+              <i class="fas fa-shield text-yellow-400"></i>
+              <span class="hidden sm:inline">Spam Filter</span>
+            </button>
+            <button onclick="refreshInbox()" class="flex items-center gap-1.5 text-xs grad-btn px-3 py-2 rounded-xl text-white">
+              <i class="fas fa-arrows-rotate"></i>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="mb-4 relative">
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+          <input id="searchInput" type="text" placeholder="Search emails..." oninput="searchEmails(this.value)"
+            class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors" />
+        </div>
+
+        <!-- Inbox panel -->
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="flex flex-col lg:flex-row" style="min-height:500px">
+            <!-- Email List -->
+            <div class="lg:w-2/5 border-b lg:border-b-0 lg:border-r border-white/10" style="max-height:600px;overflow-y:auto" class="scrollbar-thin">
+              <div id="emailList" class="divide-y divide-white/5">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            <!-- Message Viewer -->
+            <div class="lg:flex-1 p-6 flex flex-col" id="messageViewer">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Inline Ad -->
+        <div class="ad-placeholder rounded-xl my-6 flex items-center justify-center py-5 text-gray-500 text-sm">
+          <i class="fas fa-rectangle-ad mr-2 text-brand-500/50"></i>
+          Inline Advertisement (468×60)
+        </div>
+      </div>
+
+      <!-- Right Sidebar Ad -->
+      <div class="sidebar-ad w-36 shrink-0">
+        <div class="ad-placeholder rounded-xl h-96 flex flex-col items-center justify-center text-gray-500 text-xs text-center p-2 sticky top-20">
+          <i class="fas fa-rectangle-ad text-brand-500/40 text-3xl mb-2"></i>
+          <span>Right Banner<br/>Ad (160×600)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES SECTION ===== -->
+<section id="features" class="py-16 lg:py-24 relative">
+  <div class="absolute inset-0 bg-gradient-to-b from-transparent via-brand-900/10 to-transparent pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-14">
+      <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-brand-300 mb-4">
+        <i class="fas fa-star text-yellow-400"></i> 35+ Premium Features
+      </div>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
+        Everything You Need for
+        <span class="grad-text"> Privacy</span>
+      </h2>
+      <p class="text-gray-400 max-w-2xl mx-auto">Our feature-rich platform gives you full control over your temporary email experience.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+      <!-- Feature cards injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS SECTION ===== -->
+<section id="testimonials" class="py-16 lg:py-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl font-black text-white mb-3">What Our Users <span class="grad-text">Say</span></h2>
+      <p class="text-gray-400">Trusted by millions of privacy-conscious users worldwide</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <!-- Testimonial cards injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== BLOG SECTION ===== -->
+<section id="blog" class="py-16 lg:py-20 relative">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="flex items-center justify-between mb-10">
+      <div>
+        <h2 class="text-3xl sm:text-4xl font-black text-white mb-2">Latest from <span class="grad-text">Our Blog</span></h2>
+        <p class="text-gray-400 text-sm">Tips, guides, and privacy best practices</p>
+      </div>
+      <button class="hidden sm:flex items-center gap-2 glass-light px-4 py-2 rounded-xl text-sm text-gray-300 hover:text-white transition-all">
+        View All <i class="fas fa-arrow-right text-brand-400"></i>
+      </button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="blogGrid">
+      <!-- Blog cards injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ SECTION ===== -->
+<section id="faq" class="py-16 lg:py-20">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl font-black text-white mb-3">Frequently Asked <span class="grad-text">Questions</span></h2>
+      <p class="text-gray-400">Have questions? We've got answers.</p>
+    </div>
+    <div id="faqList" class="space-y-3">
+      <!-- FAQ items injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA SECTION ===== -->
+<section class="py-16 lg:py-20 relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-r from-brand-900/50 via-purple-900/30 to-blue-900/50 pointer-events-none"></div>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+    <div class="glass rounded-3xl p-10 sm:p-16 glow">
+      <h2 class="text-3xl sm:text-5xl font-black text-white mb-4">
+        Start Using <span class="grad-text">TempMail Pro</span> Today
+      </h2>
+      <p class="text-gray-400 mb-8 max-w-xl mx-auto">No sign-up required. Generate your first temporary email in seconds and protect your privacy forever.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})"
+          class="grad-btn px-8 py-4 rounded-2xl text-white font-bold text-lg">
+          <i class="fas fa-bolt mr-2"></i> Get Free Email Now
+        </button>
+        <button onclick="showToast('API docs coming soon!','fa-code')"
+          class="glass-light px-8 py-4 rounded-2xl text-white font-semibold text-lg hover:border-brand-500/50 transition-all">
+          <i class="fas fa-code mr-2 text-brand-400"></i> View API Docs
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER AD ===== -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
+  <div class="ad-placeholder rounded-xl flex items-center justify-center py-5 text-gray-500 text-sm">
+    <i class="fas fa-rectangle-ad mr-2 text-brand-500/50"></i>
+    Footer Advertisement (728×90)
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+      <!-- Brand -->
+      <div class="lg:col-span-1">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-9 h-9 rounded-xl grad-btn flex items-center justify-center">
+            <i class="fas fa-envelope-open-text text-white text-sm"></i>
+          </div>
+          <span class="text-xl font-black grad-text tracking-tight">TempMail<span class="text-white">Pro</span></span>
+        </div>
+        <p class="text-gray-500 text-sm leading-relaxed">The most reliable temporary email service. Protect your identity online with disposable addresses.</p>
+        <div class="flex gap-3 mt-5">
+          <a href="#" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500/50 transition-all"><i class="fab fa-twitter text-sm"></i></a>
+          <a href="#" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500/50 transition-all"><i class="fab fa-github text-sm"></i></a>
+          <a href="#" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500/50 transition-all"><i class="fab fa-discord text-sm"></i></a>
+          <a href="#" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500/50 transition-all"><i class="fab fa-telegram text-sm"></i></a>
+        </div>
+      </div>
+      <!-- Product -->
+      <div>
+        <h4 class="text-white font-semibold mb-4">Product</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500">
+          <li><a href="#" class="hover:text-white transition-colors">Features</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">API Access</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Browser Extension</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Mobile App</a></li>
+        </ul>
+      </div>
+      <!-- Company -->
+      <div>
+        <h4 class="text-white font-semibold mb-4">Company</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500">
+          <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Press Kit</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+        </ul>
+      </div>
+      <!-- Legal -->
+      <div>
+        <h4 class="text-white font-semibold mb-4">Legal</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500">
+          <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">GDPR</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600">
+      <p>© 2025 TempMailPro. All rights reserved.</p>
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-1.5"><div class="w-2 h-2 bg-green-400 rounded-full animate-ping"></div> All systems operational</span>
+        <span>v2.5.0</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const DOMAINS = ['tempmail.pro','mailnull.com','sharklasers.com','spamgourmet.com','guerrillamail.com'];
+let currentEmail = '';
+let emailHistory = JSON.parse(localStorage.getItem('tmHistory') || '[]');
+let inboxMessages = [];
+let activeMessageId = null;
+let spamFilter = true;
+let timerInterval = null;
+let timerSeconds = 30;
+const API = '/api'; // backend API base
+
+// ─── Backend API helpers ───────────────────────────────────────────────────────
+async function apiPost(path, body) {
+  try {
+    const r = await fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return await r.json();
+  } catch { return null; }
+}
+async function apiGet(path) {
+  try {
+    const r = await fetch(API + path);
+    return await r.json();
+  } catch { return null; }
+}
+async function apiDelete(path) {
+  try {
+    const r = await fetch(API + path, { method: 'DELETE' });
+    return await r.json();
+  } catch { return null; }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function randomWord(len) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({length:len},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+function randomName() {
+  const adj=['swift','cool','bright','dark','bold','wild','lazy','happy','tiny','clever'];
+  const noun=['fox','wolf','bear','hawk','lion','deer','raven','otter','seal','jade'];
+  return adj[Math.floor(Math.random()*adj.length)]+'.'+noun[Math.floor(Math.random()*noun.length)]+Math.floor(Math.random()*9999);
+}
+
+function generateEmail(domain) {
+  const d = domain || DOMAINS[Math.floor(Math.random()*DOMAINS.length)];
+  return randomName()+'@'+d;
+}
+
+function setEmail(email, addToHistory=true) {
+  currentEmail = email;
+  const el = document.getElementById('currentEmail');
+  el.textContent = email;
+  if (addToHistory) {
+    emailHistory = [email, ...emailHistory.filter(e=>e!==email)].slice(0,10);
+    localStorage.setItem('tmHistory', JSON.stringify(emailHistory));
+  }
+  resetTimer();
+}
+
+// ─── Backend-connected email generation ───────────────────────────────────────
+async function generateEmailFromBackend(username, domain) {
+  const body = {};
+  if (username) body.username = username;
+  if (domain)   body.domain   = domain;
+  const data = await apiPost('/emails/generate', body);
+  if (data && data.temp_email) return data.temp_email.address;
+  // Fallback to local generation if backend not available
+  return generateEmail(domain);
+}
+
+// ─── Load inbox from backend ───────────────────────────────────────────────────
+async function fetchInboxFromBackend(address) {
+  const spamParam = spamFilter ? '0' : '1';
+  const data = await apiGet(`/inbox/${encodeURIComponent(address)}?spam=${spamParam}`);
+  if (data && Array.isArray(data.messages)) {
+    return data.messages.map(m => ({
+      id:       m.id,
+      sender:   { name: m.from_name || m.from_address.split('@')[0], email: m.from_address, avatar: (m.from_name||m.from_address).substring(0,2).toUpperCase() },
+      subject:  m.subject,
+      body:     m.body_text || '(empty)',
+      preview:  (m.body_text || '(empty)').substring(0,80) + '…',
+      time:     relativeTime(m.received_at),
+      read:     !!m.is_read,
+      spam:     !!m.is_spam,
+    }));
+  }
+  return null;
+}
+
+function relativeTime(str) {
+  if (!str) return 'just now';
+  const d = new Date(str.includes('T') ? str : str.replace(' ','T')+'Z');
+  const diff = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (diff < 1)  return 'just now';
+  if (diff < 60) return diff + 'm ago';
+  return Math.floor(diff/60) + 'h ago';
+}
+
+function copyEmail() {
+  if (!currentEmail) return;
+  navigator.clipboard.writeText(currentEmail).then(()=>{
+    showToast('Email address copied!','fa-circle-check');
+    document.getElementById('emailDisplay').classList.add('copy-flash');
+    setTimeout(()=>document.getElementById('emailDisplay').classList.remove('copy-flash'),400);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=currentEmail;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Email address copied!','fa-circle-check');
+  });
+}
+
+async function refreshEmail() {
+  const icon=document.getElementById('refreshIcon');
+  icon.classList.add('refresh-spin');
+  setTimeout(()=>icon.classList.remove('refresh-spin'),1000);
+  const domain = currentEmail.split('@')[1];
+  const newAddr = await generateEmailFromBackend(null, domain);
+  setEmail(newAddr);
+  inboxMessages = [];
+  renderInbox();
+  showToast('New email address generated!','fa-rotate-right');
+}
+
+function changeDomain(domain) {
+  const user = currentEmail.split('@')[0];
+  setEmail(user+'@'+domain);
+  showToast('Domain changed to @'+domain,'fa-globe');
+}
+
+function deleteInbox() {
+  if(!confirm('Delete this inbox and all messages? This cannot be undone.')) return;
+  inboxMessages=[];activeMessageId=null;
+  renderInbox();
+  showToast('Inbox deleted!','fa-trash');
+}
+
+function toggleSpam() {
+  spamFilter=!spamFilter;
+  const btn=document.getElementById('spamBtn');
+  btn.classList.toggle('border-yellow-400/40',spamFilter);
+  showToast('Spam filter '+(spamFilter?'enabled':'disabled'),'fa-shield');
+  renderInbox();
+}
+
+function searchEmails(q) {
+  renderInbox(q.toLowerCase());
+}
+
+async function applyUsername() {
+  const u=document.getElementById('customUsername').value.trim();
+  const d=document.getElementById('domainSelect').value;
+  if(!u){showToast('Please enter a username','fa-exclamation-circle');return;}
+  const newAddr = await generateEmailFromBackend(u, d);
+  setEmail(newAddr);
+  closeModal('usernameModal');
+  showToast('Username updated!','fa-circle-check');
+}
+
+function loadHistory() {
+  const el=document.getElementById('historyList');
+  if(!emailHistory.length){
+    el.innerHTML='<p class="text-center text-gray-500 text-sm py-4">No history yet</p>';
+    return;
+  }
+  el.innerHTML=emailHistory.map(e=>`
+    <div class="flex items-center justify-between glass-light rounded-xl px-4 py-3">
+      <span class="text-sm text-white font-mono truncate">${e}</span>
+      <button onclick="setEmail('${e}',false);closeModal('historyModal');showToast('Switched to previous email','fa-clock-rotate-left')"
+        class="ml-2 text-xs text-brand-400 hover:text-brand-200 transition-colors shrink-0">Use</button>
+    </div>`).join('');
+}
+
+function showQR() {
+  const container = document.getElementById('qrCode');
+  container.innerHTML = '';
+  document.getElementById('qrEmailLabel').textContent = currentEmail;
+  const canvas = document.createElement('canvas');
+  container.appendChild(canvas);
+  if (window.QRCodeLib && window.QRCodeLib.toCanvas) {
+    window.QRCodeLib.toCanvas(canvas, currentEmail, {
+      width: 200,
+      color: { dark: '#6c63f5', light: '#ffffff' }
+    }, function(err) { if (err) console.error(err); });
+  } else {
+    // Fallback: show email text
+    canvas.style.display = 'none';
+    const msg = document.createElement('p');
+    msg.className = 'text-brand-400 text-sm break-all text-center';
+    msg.textContent = currentEmail;
+    container.appendChild(msg);
+  }
+  openModal('qrModal');
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, icon='fa-circle-check') {
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').className='fas '+icon+' text-lg';
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── Timer ────────────────────────────────────────────────────────────────────
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerSeconds=30;
+  document.getElementById('timerCount').textContent='30s';
+  timerInterval=setInterval(()=>{
+    timerSeconds--;
+    document.getElementById('timerCount').textContent=timerSeconds+'s';
+    if(timerSeconds<=0){
+      addRandomEmail();
+      timerSeconds=30;
+    }
+  },1000);
+}
+
+// ─── Fake Inbox ───────────────────────────────────────────────────────────────
+const sampleSenders = [
+  {name:'GitHub', email:'noreply@github.com', avatar:'G'},
+  {name:'Discord', email:'noreply@discord.com', avatar:'D'},
+  {name:'Notion', email:'team@notion.so', avatar:'N'},
+  {name:'Stripe', email:'receipts@stripe.com', avatar:'S'},
+  {name:'Figma', email:'design@figma.com', avatar:'F'},
+  {name:'Vercel', email:'noreply@vercel.com', avatar:'V'},
+  {name:'Linear', email:'updates@linear.app', avatar:'L'},
+  {name:'Slack', email:'feedback@slack.com', avatar:'Sl'},
+];
+const sampleSubjects = [
+  'Welcome to our service! Get started today',
+  'Your verification code is 847291',
+  'Password reset request received',
+  'Your account has been created successfully',
+  'Monthly newsletter – Top Privacy Tips',
+  'Action required: Confirm your email',
+  'Your subscription receipt #INV-20240315',
+  'New login detected on your account',
+];
+const sampleBodies = [
+  'Thank you for signing up! Your account is ready. Click the button below to verify your email address and start exploring all the features we have to offer.',
+  'Your one-time verification code is: <strong style="color:#a78bfa;font-size:1.5em;letter-spacing:4px;">847291</strong><br><br>This code expires in 10 minutes.',
+  'We received a request to reset the password for your account. If you didn\'t make this request, please ignore this email.',
+  'Congratulations! Your new account has been successfully created. You can now log in and start using all our premium features.',
+  'Welcome to this month\'s privacy newsletter. Here are the top tips to protect your online identity and keep your data safe.',
+];
+
+function stripHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+}
+
+function makeMessage(id) {
+  const sender=sampleSenders[Math.floor(Math.random()*sampleSenders.length)];
+  const subject=sampleSubjects[Math.floor(Math.random()*sampleSubjects.length)];
+  const body=sampleBodies[Math.floor(Math.random()*sampleBodies.length)];
+  const mins=Math.floor(Math.random()*59)+1;
+  return {id, sender, subject, body, preview:stripHtml(body).substring(0,80)+'…', time:mins+'m ago', read:false, spam:Math.random()<0.1};
+}
+
+function addRandomEmail() {
+  const msg = makeMessage(Date.now());
+  inboxMessages.unshift(msg);
+  renderInbox();
+  showToast('New email from '+msg.sender.name,'fa-envelope');
+}
+
+async function refreshInbox() {
+  // Try to fetch real messages from backend
+  if (currentEmail) {
+    const msgs = await fetchInboxFromBackend(currentEmail);
+    if (msgs !== null) {
+      inboxMessages = msgs;
+      renderInbox();
+      showToast('Inbox refreshed!','fa-arrows-rotate');
+      return;
+    }
+  }
+  // Fallback: add demo messages
+  addRandomEmail();
+  addRandomEmail();
+  showToast('Inbox refreshed!','fa-arrows-rotate');
+}
+
+function renderInbox(search='') {
+  const list=document.getElementById('emailList');
+  const count=document.getElementById('emailCountLabel');
+
+  let msgs=inboxMessages.filter(m=>!(spamFilter&&m.spam));
+  if(search) msgs=msgs.filter(m=>
+    m.subject.toLowerCase().includes(search)||
+    m.sender.name.toLowerCase().includes(search)||
+    m.preview.toLowerCase().includes(search)
+  );
+
+  count.textContent=msgs.length+' message'+(msgs.length===1?'':'s');
+
+  if(!msgs.length) {
+    list.innerHTML=`
+      <div class="flex flex-col items-center justify-center h-64 text-center p-8">
+        <div class="w-20 h-20 rounded-full glass-light flex items-center justify-center mb-4">
+          <i class="fas fa-inbox text-3xl text-brand-400/50"></i>
+        </div>
+        <h3 class="text-white font-semibold mb-2">Inbox is empty</h3>
+        <p class="text-gray-500 text-sm">Emails sent to <span class="text-brand-400">${currentEmail}</span> will appear here automatically</p>
+        <div class="flex items-center gap-2 mt-4 text-xs text-gray-600">
+          <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></div>
+          Waiting for emails…
+        </div>
+      </div>`;
+    document.getElementById('messageViewer').innerHTML = emptyViewer();
+    return;
+  }
+
+  list.innerHTML=msgs.map(m=>`
+    <div class="inbox-item p-4 cursor-pointer border-l-2 ${m.id===activeMessageId?'active border-brand-500':'border-transparent'} ${m.spam?'opacity-60':''}"
+      onclick="openMessage(${m.id})">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-xl grad-btn flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">${m.sender.avatar}</div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-1 mb-0.5">
+            <span class="text-sm font-semibold text-white truncate">${m.sender.name}</span>
+            <span class="text-xs text-gray-500 shrink-0">${m.time}</span>
+          </div>
+          <div class="text-sm ${m.read?'text-gray-400':'text-gray-200 font-medium'} truncate mb-0.5">${m.subject}</div>
+          <div class="text-xs text-gray-500 truncate">${m.preview.substring(0,60)}…</div>
+          ${m.spam?'<span class="inline-block mt-1 text-xs bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/20">Spam</span>':''}
+        </div>
+        ${!m.read?'<div class="w-2 h-2 bg-brand-400 rounded-full shrink-0 mt-2"></div>':''}
+      </div>
+    </div>`).join('');
+}
+
+function emptyViewer() {
+  return `<div class="flex flex-col items-center justify-center h-full text-center py-10">
+    <div class="w-24 h-24 glass-light rounded-3xl flex items-center justify-center mb-5 animate-float">
+      <i class="fas fa-envelope-open text-4xl text-brand-400/40"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-white mb-2">Select an email to read</h3>
+    <p class="text-gray-500 text-sm max-w-xs">Click on any message in your inbox to view its content here</p>
+  </div>`;
+}
+
+function openMessage(id) {
+  activeMessageId=id;
+  const m=inboxMessages.find(x=>x.id===id);
+  if(!m)return;
+  m.read=true;
+  renderInbox(document.getElementById('searchInput').value);
+
+  document.getElementById('messageViewer').innerHTML=`
+    <div class="flex flex-col h-full animate-slide-in">
+      <div class="flex items-start justify-between gap-3 mb-5 pb-4 border-b border-white/10">
+        <div class="flex items-start gap-3">
+          <div class="w-11 h-11 rounded-xl grad-btn flex items-center justify-center text-white font-bold shrink-0">${m.sender.avatar}</div>
+          <div>
+            <div class="text-white font-semibold">${m.sender.name}</div>
+            <div class="text-xs text-gray-500">${m.sender.email}</div>
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="showToast('Downloading .eml…','fa-download')" class="text-xs glass-light px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition-all">
+            <i class="fas fa-download mr-1 text-brand-400"></i>Download
+          </button>
+          <button onclick="showToast('Email forwarded!','fa-share')" class="text-xs glass-light px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition-all">
+            <i class="fas fa-share mr-1 text-blue-400"></i>Forward
+          </button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <h3 class="text-lg font-bold text-white mb-1">${m.subject}</h3>
+        <span class="text-xs text-gray-500">${m.time}</span>
+      </div>
+      <div class="flex-1 overflow-y-auto text-sm text-gray-300 leading-relaxed scrollbar-thin">
+        <div class="bg-white/5 rounded-2xl p-5">${m.body}</div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-white/10 flex gap-2 text-xs text-gray-500">
+        <button onclick="copyToClipboard('${m.body.replace(/'/g,'&apos;')}')" class="hover:text-white transition-colors">
+          <i class="fas fa-copy mr-1"></i>Copy Content
+        </button>
+        <span class="mx-2">·</span>
+        <button onclick="showToast('Exported to PDF!','fa-file-pdf')" class="hover:text-white transition-colors">
+          <i class="fas fa-file-pdf mr-1"></i>Export PDF
+        </button>
+        <span class="mx-2">·</span>
+        <button onclick="deleteMessage(${id})" class="hover:text-red-400 transition-colors">
+          <i class="fas fa-trash mr-1"></i>Delete
+        </button>
+      </div>
+    </div>`;
+}
+
+function deleteMessage(id) {
+  inboxMessages=inboxMessages.filter(m=>m.id!==id);
+  activeMessageId=null;
+  document.getElementById('messageViewer').innerHTML=emptyViewer();
+  renderInbox(document.getElementById('searchInput').value);
+  showToast('Message deleted','fa-trash');
+}
+
+function copyToClipboard(text) {
+  const plain = stripHtml(text);
+  navigator.clipboard.writeText(plain).catch(()=>{});
+  showToast('Content copied!','fa-copy');
+}
+
+// ─── Features ─────────────────────────────────────────────────────────────────
+const features = [
+  {icon:'fa-bolt',color:'text-yellow-400',bg:'from-yellow-500/10 to-yellow-600/5',title:'Instant Generation',desc:'Get a working email address in under a second. No waiting, no registration.'},
+  {icon:'fa-copy',color:'text-brand-400',bg:'from-brand-500/10 to-brand-600/5',title:'One-Click Copy',desc:'Copy your email address to clipboard with a single tap or click.'},
+  {icon:'fa-globe',color:'text-green-400',bg:'from-green-500/10 to-green-600/5',title:'Multiple Domains',desc:'Choose from 25+ available domains for your temporary address.'},
+  {icon:'fa-infinity',color:'text-purple-400',bg:'from-purple-500/10 to-purple-600/5',title:'Unlimited Emails',desc:'Create as many temporary addresses as you need with no daily limits.'},
+  {icon:'fa-arrows-rotate',color:'text-blue-400',bg:'from-blue-500/10 to-blue-600/5',title:'Real-Time Refresh',desc:'Inbox updates automatically every 30 seconds to catch new messages.'},
+  {icon:'fa-eye',color:'text-cyan-400',bg:'from-cyan-500/10 to-cyan-600/5',title:'Email Preview',desc:'Read full email content inline without leaving the dashboard.'},
+  {icon:'fa-download',color:'text-orange-400',bg:'from-orange-500/10 to-orange-600/5',title:'Download as .eml',desc:'Save any received email as a standard .eml file to your device.'},
+  {icon:'fa-share',color:'text-pink-400',bg:'from-pink-500/10 to-pink-600/5',title:'Email Forwarding',desc:'Forward important messages to your real inbox with one click.'},
+  {icon:'fa-shield-halved',color:'text-red-400',bg:'from-red-500/10 to-red-600/5',title:'Spam Protection',desc:'Advanced AI-powered spam detection filters junk before it reaches you.'},
+  {icon:'fa-clock-rotate-left',color:'text-amber-400',bg:'from-amber-500/10 to-amber-600/5',title:'Auto-Delete Expired',desc:'Emails and inboxes are automatically purged after expiry for your privacy.'},
+  {icon:'fa-user-pen',color:'text-violet-400',bg:'from-violet-500/10 to-violet-600/5',title:'Custom Username',desc:'Pick your own username and pair it with any available domain.'},
+  {icon:'fa-qrcode',color:'text-teal-400',bg:'from-teal-500/10 to-teal-600/5',title:'QR Code',desc:'Scan the QR code with your phone to instantly use your email address.'},
+  {icon:'fa-moon',color:'text-indigo-400',bg:'from-indigo-500/10 to-indigo-600/5',title:'Dark Mode',desc:'Easy on the eyes. Toggle between dark and light themes any time.'},
+  {icon:'fa-mobile-screen',color:'text-emerald-400',bg:'from-emerald-500/10 to-emerald-600/5',title:'Mobile Responsive',desc:'Fully optimized for all screen sizes – phones, tablets, and desktops.'},
+  {icon:'fa-magnifying-glass',color:'text-sky-400',bg:'from-sky-500/10 to-sky-600/5',title:'Email Search',desc:'Full-text search through your inbox to find any message instantly.'},
+  {icon:'fa-paperclip',color:'text-lime-400',bg:'from-lime-500/10 to-lime-600/5',title:'Attachment Viewer',desc:'Preview and download file attachments directly in the browser.'},
+  {icon:'fa-trash-can',color:'text-rose-400',bg:'from-rose-500/10 to-rose-600/5',title:'One-Click Reset',desc:'Clear your entire inbox with one click and start fresh immediately.'},
+  {icon:'fa-clock-rotate-left',color:'text-fuchsia-400',bg:'from-fuchsia-500/10 to-fuchsia-600/5',title:'Email History',desc:'Browse your last 10 generated addresses and switch between them.'},
+  {icon:'fa-language',color:'text-orange-300',bg:'from-orange-400/10 to-orange-500/5',title:'Multi-Language',desc:'Interface available in 20+ languages for global accessibility.'},
+  {icon:'fa-chart-line',color:'text-green-300',bg:'from-green-400/10 to-green-500/5',title:'SEO Optimized',desc:'Fast load times and structured data for excellent search engine ranking.'},
+  {icon:'fa-at',color:'text-blue-300',bg:'from-blue-400/10 to-blue-500/5',title:'Custom Domains',desc:'Add your own domain and get temp emails on your personal domain.'},
+  {icon:'fa-user-secret',color:'text-purple-300',bg:'from-purple-400/10 to-purple-500/5',title:'Privacy Protection',desc:'Zero personal data collection. Your identity stays completely anonymous.'},
+  {icon:'fa-share-nodes',color:'text-cyan-300',bg:'from-cyan-400/10 to-cyan-500/5',title:'Inbox Sharing',desc:'Share your temp inbox link with colleagues or collaborators temporarily.'},
+  {icon:'fa-code',color:'text-brand-300',bg:'from-brand-400/10 to-brand-500/5',title:'API Access',desc:'Full REST API for developers to integrate temp mail into their applications.'},
+  {icon:'fa-bell',color:'text-yellow-300',bg:'from-yellow-400/10 to-yellow-500/5',title:'Push Notifications',desc:'Browser notifications alert you the moment a new email arrives.'},
+  {icon:'fa-hourglass-half',color:'text-red-300',bg:'from-red-400/10 to-red-500/5',title:'Disposable Timer',desc:'Set a custom expiry time from 10 minutes up to 24 hours.'},
+  {icon:'fa-rotate',color:'text-teal-300',bg:'from-teal-400/10 to-teal-500/5',title:'Domain Rotation',desc:'Automatically rotate domains to stay ahead of blocklists.'},
+  {icon:'fa-robot',color:'text-violet-300',bg:'from-violet-400/10 to-violet-500/5',title:'AI Spam Filter',desc:'Machine learning model classifies incoming mail with 99.9% accuracy.'},
+  {icon:'fa-file-pdf',color:'text-rose-300',bg:'from-rose-400/10 to-rose-500/5',title:'Export to PDF',desc:'Save any email thread as a neatly formatted PDF document.'},
+  {icon:'fa-cloud',color:'text-sky-300',bg:'from-sky-400/10 to-sky-500/5',title:'Cloud Storage',desc:'Inbox backed up to the cloud so you never lose important messages.'},
+  {icon:'fa-envelope-circle-check',color:'text-emerald-300',bg:'from-emerald-400/10 to-emerald-500/5',title:'Read/Unread Status',desc:'Track which messages you have and haven\'t read with visual indicators.'},
+  {icon:'fa-clipboard-list',color:'text-amber-300',bg:'from-amber-400/10 to-amber-500/5',title:'Copy Content',desc:'Copy the entire body of any email with a single button press.'},
+  {icon:'fa-lock',color:'text-indigo-300',bg:'from-indigo-400/10 to-indigo-500/5',title:'Encrypted Inbox',desc:'End-to-end encryption ensures your messages remain private and secure.'},
+  {icon:'fa-fingerprint',color:'text-fuchsia-300',bg:'from-fuchsia-400/10 to-fuchsia-500/5',title:'Session Protection',desc:'Your inbox is session-scoped – it vanishes when you close the tab.'},
+  {icon:'fa-network-wired',color:'text-lime-300',bg:'from-lime-400/10 to-lime-500/5',title:'Global CDN',desc:'Hosted on a worldwide CDN for lightning-fast delivery anywhere on Earth.'},
+];
+
+function renderFeatures() {
+  const grid=document.querySelector('#features .grid');
+  grid.innerHTML=features.map(f=>`
+    <div class="card-3d glass rounded-2xl p-5 group cursor-default">
+      <div class="feature-icon w-11 h-11 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+        <i class="fas ${f.icon} ${f.color} text-lg"></i>
+      </div>
+      <h3 class="text-white font-semibold mb-1.5 text-sm">${f.title}</h3>
+      <p class="text-gray-500 text-xs leading-relaxed">${f.desc}</p>
+    </div>`).join('');
+}
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+const testimonials = [
+  {name:'Sarah K.',role:'Freelance Developer',avatar:'SK',rating:5,text:'TempMail Pro is a lifesaver! I use it for every test account I create. The real-time inbox is incredibly fast.'},
+  {name:'Marcus R.',role:'Privacy Advocate',avatar:'MR',rating:5,text:'Finally a temp mail service that actually looks premium. Dark mode + mobile support makes it perfect on the go.'},
+  {name:'Priya M.',role:'UX Designer',avatar:'PM',rating:5,text:'The QR code feature is genius. Scan and use from any device. The design is beautiful too – very polished!'},
+  {name:'Alex T.',role:'DevOps Engineer',avatar:'AT',rating:5,text:'The API access is fantastic for automated testing pipelines. Documentation is clear and integration was a breeze.'},
+];
+
+function renderTestimonials() {
+  const grid=document.querySelector('#testimonials .grid');
+  grid.innerHTML=testimonials.map(t=>`
+    <div class="card-3d glass rounded-2xl p-6">
+      <div class="flex gap-0.5 mb-4">
+        ${Array(t.rating).fill('<i class="fas fa-star star-filled text-sm"></i>').join('')}
+      </div>
+      <p class="text-gray-300 text-sm leading-relaxed mb-5">"${t.text}"</p>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl grad-btn flex items-center justify-center text-white text-xs font-bold">${t.avatar}</div>
+        <div>
+          <div class="text-white text-sm font-semibold">${t.name}</div>
+          <div class="text-gray-500 text-xs">${t.role}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+const blogs = [
+  {icon:'fa-user-shield',color:'text-brand-400',cat:'Privacy',title:'Why You Should Never Use Your Real Email to Sign Up Online',excerpt:'Every time you register on an unfamiliar website using your primary email, you risk spam, data breaches, and identity theft.',time:'5 min read'},
+  {icon:'fa-envelope-open',color:'text-purple-400',cat:'Guide',title:'The Ultimate Guide to Disposable Email Addresses in 2025',excerpt:'Disposable emails are more powerful than ever. Here\'s everything you need to know about using them effectively.',time:'8 min read'},
+  {icon:'fa-ban',color:'text-red-400',cat:'Anti-Spam',title:'10 Proven Ways to Eliminate Spam from Your Life for Good',excerpt:'Spam is a constant battle. These strategies, combined with disposable emails, will dramatically reduce unwanted messages.',time:'6 min read'},
+  {icon:'fa-shield',color:'text-green-400',cat:'Security',title:'Online Security Tips: Protecting Your Digital Identity in 2025',excerpt:'Your digital identity is under constant threat. Learn the best practices to stay anonymous and secure online.',time:'7 min read'},
+];
+
+function renderBlog() {
+  document.getElementById('blogGrid').innerHTML=blogs.map(b=>`
+    <div class="blog-card glass rounded-2xl overflow-hidden cursor-pointer" onclick="showToast('Full article coming soon!','fa-book')">
+      <div class="h-36 bg-gradient-to-br from-brand-900/50 to-purple-900/50 flex items-center justify-center">
+        <i class="fas ${b.icon} ${b.color} text-5xl opacity-60"></i>
+      </div>
+      <div class="p-5">
+        <span class="text-xs text-brand-400 font-semibold uppercase tracking-wider">${b.cat}</span>
+        <h3 class="text-sm font-bold text-white mt-1.5 mb-2 line-clamp-2 leading-snug">${b.title}</h3>
+        <p class="text-xs text-gray-500 line-clamp-2 mb-3">${b.excerpt}</p>
+        <span class="text-xs text-gray-600 flex items-center gap-1.5"><i class="fas fa-clock text-brand-400/50"></i>${b.time}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+const faqs = [
+  {q:'How long does a temporary email address last?',a:'By default, each temporary email address is active for 1 hour. You can extend it up to 24 hours in settings, or set custom expiry from 10 minutes to 24 hours on our Pro plan.'},
+  {q:'Is TempMail Pro really completely free?',a:'Yes! The core service – email generation, inbox, copy, QR code, and history – is 100% free with no credit card required. We offer a Pro plan with advanced features like custom domains and API access.'},
+  {q:'Can I choose my own domain?',a:'Absolutely! Free users can pick from 25+ shared domains. Pro users can add their own custom domains (e.g., @yourcompany.com) for branded disposable addresses.'},
+  {q:'Is my privacy protected when I use TempMail Pro?',a:'Yes. We collect zero personal data. No IP logging, no cookies beyond session data, and all inboxes are automatically deleted upon expiry. We are fully GDPR and CCPA compliant.'},
+  {q:'Can I receive attachments in my temporary inbox?',a:'Yes! TempMail Pro supports email attachments. You can preview images and PDF files directly in the browser, and download any attachment to your device.'},
+  {q:'Is there an API I can use for automated testing?',a:'Yes! We offer a comprehensive REST API that lets you programmatically generate addresses, check inboxes, and retrieve messages. Perfect for QA engineers and developers automating test workflows.'},
+  {q:'Do you offer a mobile app?',a:'A mobile-first experience is built directly into our responsive web app. Dedicated iOS and Android apps are currently in development and coming soon.'},
+  {q:'What happens to emails after the inbox expires?',a:'All emails and inbox data are permanently and irreversibly deleted from our servers upon expiry. There is no recovery option – this is by design for maximum privacy.'},
+];
+
+function renderFAQ() {
+  document.getElementById('faqList').innerHTML=faqs.map((f,i)=>`
+    <div class="glass rounded-2xl overflow-hidden">
+      <button onclick="toggleFAQ(${i})" class="w-full flex items-center justify-between p-5 text-left gap-4">
+        <span class="text-white font-medium text-sm sm:text-base">${f.q}</span>
+        <i id="faqIcon${i}" class="fas fa-chevron-down text-brand-400 text-sm shrink-0 transition-transform"></i>
+      </button>
+      <div id="faqAns${i}" class="faq-answer">
+        <div class="px-5 pb-5 text-gray-400 text-sm leading-relaxed">${f.a}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleFAQ(i) {
+  const ans=document.getElementById('faqAns'+i);
+  const icon=document.getElementById('faqIcon'+i);
+  const isOpen=ans.classList.toggle('open');
+  icon.style.transform=isOpen?'rotate(180deg)':'rotate(0deg)';
+}
+
+// ─── Stats Counter ─────────────────────────────────────────────────────────────
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target=parseInt(el.dataset.count);
+    const suffix=el.dataset.suffix||'';
+    const duration=2000;
+    const start=Date.now();
+    const update=()=>{
+      const elapsed=Date.now()-start;
+      const progress=Math.min(elapsed/duration,1);
+      const ease=1-Math.pow(1-progress,4);
+      const value=Math.floor(ease*target);
+      let display;
+      if(target>=1000000) display=(value/1000000).toFixed(target%1000000===0?0:1).replace(/\.0$/,'')+'M';
+      else if(target>=1000) display=Math.floor(value/1000)+'K';
+      else display=value;
+      el.textContent=display+suffix;
+      if(progress<1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+  });
+}
+
+// ─── Intersection Observer ────────────────────────────────────────────────────
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) {
+      if(e.target.dataset.count!==undefined) animateCounters();
+      e.target.classList.add('animate-fade-in');
+    }
+  });
+},{threshold:0.2});
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+function createParticles() {
+  const container=document.getElementById('particles');
+  for(let i=0;i<15;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*6+2;
+    p.style.cssText=`
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100+100}%;
+      animation-duration:${Math.random()*15+10}s;
+      animation-delay:${Math.random()*10}s;
+      opacity:${Math.random()*0.5+0.1};
+    `;
+    container.appendChild(p);
+  }
+}
+
+// ─── Dark mode ────────────────────────────────────────────────────────────────
+let darkMode=true;
+function toggleDark() {
+  darkMode=!darkMode;
+  const icon=document.getElementById('darkToggle').querySelector('i');
+  if(darkMode) {
+    document.documentElement.classList.remove('light-mode');
+    icon.className='fas fa-moon text-lg';
+  } else {
+    document.documentElement.classList.add('light-mode');
+    icon.className='fas fa-sun text-lg';
+    showToast('Light mode coming soon!','fa-sun');
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  // Render sections immediately
+  renderFeatures();
+  renderTestimonials();
+  renderBlog();
+  renderFAQ();
+  renderInbox();
+
+  // Try to get email from history or generate via backend
+  const savedHistory = JSON.parse(localStorage.getItem('tmHistory') || '[]');
+  let email = savedHistory.length ? savedHistory[0] : null;
+
+  if (!email) {
+    email = await generateEmailFromBackend();
+  }
+  setEmail(email, !savedHistory.includes(email));
+
+  // Try to fetch real inbox from backend; fallback to demo messages
+  const backendMsgs = await fetchInboxFromBackend(email);
+  if (backendMsgs !== null) {
+    inboxMessages = backendMsgs;
+  } else {
+    // Seed with demo messages
+    for(let i=0;i<3;i++) inboxMessages.push(makeMessage(Date.now()-i*1000));
+  }
+  renderInbox();
+
+  // Observe stat counters
+  document.querySelectorAll('[data-count]').forEach(el=>observer.observe(el));
+
+  // Create particles
+  createParticles();
+
+  // Scroll spy for navbar
+  window.addEventListener('scroll',()=>{
+    const nav=document.getElementById('navbar');
+    if(window.scrollY>50) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

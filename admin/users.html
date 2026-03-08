@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>User Management</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+          <i class="fas fa-user-plus"></i> Add User
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Filters -->
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="search-wrap" style="flex:1;min-width:200px">
+              <i class="fas fa-magnifying-glass"></i>
+              <input class="form-control" id="searchInput" placeholder="Search by email…" oninput="debounce(loadUsers,400)()" style="padding-left:36px" />
+            </div>
+            <select class="form-control" id="statusFilter" style="width:140px" onchange="loadUsers()">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="banned">Banned</option>
+              <option value="suspended">Suspended</option>
+            </select>
+            <select class="form-control" id="roleFilter" style="width:140px" onchange="loadUsers()">
+              <option value="">All Roles</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Superadmin</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-users text-brand"></i> Users</div>
+          <span id="totalCount" class="badge badge-brand">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>API Key</th>
+                <th>Joined</th>
+                <th>Last Login</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-user-pen" style="color:#a78bfa;margin-right:8px"></i> Edit User</h3>
+      <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <input type="hidden" id="editUserId" />
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-control" id="editEmail" type="email" readonly style="opacity:0.6" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" id="editRole">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+          <option value="superadmin">Superadmin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="editStatus">
+          <option value="active">Active</option>
+          <option value="banned">Banned</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-user-plus" style="color:#34d399;margin-right:8px"></i> Create User</h3>
+      <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email *</label>
+      <input class="form-control" id="newEmail" type="email" placeholder="user@example.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password *</label>
+      <input class="form-control" id="newPassword" type="password" placeholder="Min 8 characters" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-control" id="newRole">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="superadmin">Superadmin</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()"><i class="fas fa-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/admin.js"></script>
+<script>
+  injectSidebar('users');
+  let currentPage = 1;
+  let debounceTimer;
+  function debounce(fn, delay) {
+    return function(...args) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  async function loadUsers(page = currentPage) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    const role   = document.getElementById('roleFilter').value;
+    const params = new URLSearchParams({ page, limit:25, search, status, role });
+
+    try {
+      const d = await GET(`/api/admin/users?${params}`);
+      document.getElementById('totalCount').textContent = d.total + ' total';
+      renderUsers(d.users);
+      const pEl = document.getElementById('pagination');
+      pEl.innerHTML = '';
+      pEl.appendChild(buildPagination(page, d.total, 25, loadUsers));
+    } catch(e) {
+      showToast('Failed to load users: ' + e.message, 'error');
+    }
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('usersBody');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">No users found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td>${u.email}</td>
+        <td>${roleBadge(u.role)}</td>
+        <td>${statusBadge(u.status)}</td>
+        <td><span class="monospace text-muted">${(u.api_key||'').substring(0,12)}…</span></td>
+        <td>${fmtDate(u.created_at)}</td>
+        <td>${fmtDate(u.last_login)}</td>
+        <td style="text-align:right">
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button class="btn btn-secondary btn-xs" onclick="openEdit(${JSON.stringify(u).replace(/"/g,'&quot;')})">
+              <i class="fas fa-pencil"></i>
+            </button>
+            <button class="btn btn-danger btn-xs" onclick="deleteUser(${u.id},'${u.email}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  function openEdit(user) {
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editEmail').value   = user.email;
+    document.getElementById('editRole').value    = user.role;
+    document.getElementById('editStatus').value  = user.status;
+    openModal('editModal');
+  }
+
+  async function saveUser() {
+    const id     = document.getElementById('editUserId').value;
+    const role   = document.getElementById('editRole').value;
+    const status = document.getElementById('editStatus').value;
+    try {
+      await PATCH(`/api/admin/users/${id}/status`, { status });
+      await PATCH(`/api/admin/users/${id}/role`,   { role });
+      closeModal('editModal');
+      showToast('User updated successfully', 'success');
+      loadUsers();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function deleteUser(id, email) {
+    const ok = await showConfirm(`Delete user <strong>${email}</strong>? This cannot be undone.`, 'Delete User');
+    if (!ok) return;
+    try {
+      await DELETE(`/api/admin/users/${id}`);
+      showToast('User deleted', 'success');
+      loadUsers();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function openCreateModal() {
+    document.getElementById('newEmail').value    = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newRole').value     = 'user';
+    openModal('createModal');
+  }
+
+  async function createUser() {
+    const email    = document.getElementById('newEmail').value.trim();
+    const password = document.getElementById('newPassword').value;
+    const role     = document.getElementById('newRole').value;
+    if (!email || !password) { showToast('Email and password are required', 'error'); return; }
+    try {
+      await POST('/api/admin/users', { email, password, role });
+      closeModal('createModal');
+      showToast('User created successfully', 'success');
+      loadUsers();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function injectSidebar(active) {
+    document.getElementById('sidebar-container').innerHTML = buildSidebar(active);
+  }
+  function buildSidebar(a) {
+    const items = [
+      ['dashboard','fa-chart-pie','Dashboard','dashboard.html'],
+      ['users','fa-users','Users','users.html'],
+      ['emails','fa-envelope','Temp Emails','emails.html'],
+      ['messages','fa-inbox','Messages','messages.html'],
+      ['domains','fa-globe','Domains','domains.html'],
+      ['settings','fa-gear','Settings','settings.html'],
+      ['audit','fa-scroll','Audit Log','audit.html'],
+    ];
+    return `<aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="icon"><i class="fas fa-shield-halved"></i></div>
+        <div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div>
+      </div>
+      <nav style="flex:1;overflow-y:auto">
+        <div class="nav-section"><div class="nav-section-label">Navigation</div>
+          ${items.map(([id,icon,label,href])=>`
+            <a href="${href}" class="nav-item ${a===id?'active':''}">
+              <i class="fas ${icon} icon"></i> ${label}
+            </a>`).join('')}
+          <a href="/" target="_blank" class="nav-item">
+            <i class="fas fa-arrow-up-right-from-square icon"></i> View Site
+          </a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="logout()">
+          <div class="sidebar-avatar" id="sidebar-avatar">AD</div>
+          <div class="sidebar-user-info">
+            <div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div>
+            <div class="role" id="sidebar-user-role">superadmin</div>
+          </div>
+          <i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i>
+        </div>
+      </div>
+    </aside>`;
+  }
+
+  if (initPage()) {
+    loadUsers();
+    setupModalClose('editModal');
+    setupModalClose('createModal');
+  }
+</script>
+</body>
+</html>

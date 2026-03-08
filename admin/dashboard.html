@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar injected by JS -->
+  <div id="sidebar-container"></div>
+
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="text-sm text-muted" id="lastRefresh"></span>
+        <button class="btn btn-primary btn-sm" onclick="loadDashboard()">
+          <i class="fas fa-arrows-rotate"></i> Refresh
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Stat Cards -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+        <div class="stat-card"><div class="shimmer" style="height:80px;border-radius:8px"></div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid-2 mb-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-envelope text-brand"></i> Emails Generated (7 days)</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="chartEmails"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-inbox text-brand"></i> Messages Received (7 days)</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="chartMessages"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="grid-aside">
+        <!-- Recent Emails -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-clock text-brand"></i> Recent Temp Emails</div>
+            <a href="emails.html" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Address</th>
+                  <th>Domain</th>
+                  <th>Owner</th>
+                  <th>Expires</th>
+                </tr>
+              </thead>
+              <tbody id="recentEmails">
+                <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:30px">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-scroll text-brand"></i> Recent Activity</div>
+            <a href="audit.html" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div class="card-body" id="recentAudit" style="padding-top:0">
+            <p style="text-align:center;color:var(--text3);padding:30px 0">Loading…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Users -->
+      <div class="card mt-6">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-user-plus text-brand"></i> New Users</div>
+          <a href="users.html" class="btn btn-secondary btn-sm">Manage Users</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="recentUsers">
+              <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:30px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script src="assets/admin.js"></script>
+<script>
+  // Inject sidebar
+  document.getElementById('sidebar-container').innerHTML = `
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="icon"><i class="fas fa-shield-halved"></i></div>
+        <div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div>
+      </div>
+      <nav style="flex:1;overflow-y:auto">
+        <div class="nav-section">
+          <div class="nav-section-label">Overview</div>
+          <a href="dashboard.html" class="nav-item active"><i class="fas fa-chart-pie icon"></i> Dashboard</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Management</div>
+          <a href="users.html" class="nav-item"><i class="fas fa-users icon"></i> Users</a>
+          <a href="emails.html" class="nav-item"><i class="fas fa-envelope icon"></i> Temp Emails</a>
+          <a href="messages.html" class="nav-item"><i class="fas fa-inbox icon"></i> Messages</a>
+          <a href="domains.html" class="nav-item"><i class="fas fa-globe icon"></i> Domains</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">System</div>
+          <a href="settings.html" class="nav-item"><i class="fas fa-gear icon"></i> Settings</a>
+          <a href="audit.html" class="nav-item"><i class="fas fa-scroll icon"></i> Audit Log</a>
+        </div>
+        <div class="nav-section">
+          <a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="logout()">
+          <div class="sidebar-avatar" id="sidebar-avatar">AD</div>
+          <div class="sidebar-user-info">
+            <div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div>
+            <div class="role" id="sidebar-user-role">superadmin</div>
+          </div>
+          <i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i>
+        </div>
+      </div>
+    </aside>`;
+
+  async function loadDashboard() {
+    try {
+      const d = await GET('/api/admin/dashboard');
+      renderStats(d.stats);
+      renderCharts(d.chart_daily, d.chart_messages);
+      renderRecentEmails(d.recent_emails);
+      renderRecentAudit(d.recent_audit);
+      renderRecentUsers(d.recent_users);
+      document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch(e) {
+      showToast('Failed to load dashboard: ' + e.message, 'error');
+    }
+  }
+
+  function renderStats(s) {
+    const grid = document.getElementById('statsGrid');
+    const cards = [
+      { label:'Total Users',    value:s.users.total,    sub:`+${s.users.today} today`,    icon:'fa-users',   color:'rgba(108,99,245,0.15)', icolor:'#a78bfa' },
+      { label:'Active Users',   value:s.users.active,   sub:`${s.users.banned} banned`,    icon:'fa-user-check', color:'rgba(16,185,129,0.15)', icolor:'#34d399' },
+      { label:'Emails Total',   value:s.emails.total,   sub:`${s.emails.active} active`,   icon:'fa-envelope', color:'rgba(59,130,246,0.15)', icolor:'#60a5fa' },
+      { label:'Emails Today',   value:s.emails.today,   sub:`${s.emails.expired} expired`, icon:'fa-bolt',    color:'rgba(245,158,11,0.15)', icolor:'#fbbf24' },
+      { label:'Messages',       value:s.messages.total, sub:`${s.messages.spam} spam`,     icon:'fa-inbox',   color:'rgba(168,85,247,0.15)', icolor:'#c084fc' },
+      { label:'Domains Active', value:s.domains.active, sub:`${s.domains.total} total`,    icon:'fa-globe',   color:'rgba(239,68,68,0.15)',  icolor:'#f87171' },
+    ];
+    grid.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div style="position:relative;z-index:1">
+          <div class="stat-card-icon" style="background:${c.color}">
+            <i class="fas ${c.icon}" style="color:${c.icolor}"></i>
+          </div>
+          <div class="stat-card-value">${fmtNum(c.value)}</div>
+          <div class="stat-card-label">${c.label}</div>
+          <div class="stat-card-sub text-muted">${c.sub}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderCharts(emailData, msgData) {
+    setTimeout(() => {
+      const c1 = document.getElementById('chartEmails');
+      const c2 = document.getElementById('chartMessages');
+      drawBarChart(c1, emailData);
+      drawBarChart(c2, msgData);
+    }, 50);
+  }
+
+  function renderRecentEmails(emails) {
+    const tbody = document.getElementById('recentEmails');
+    if (!emails.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">No emails yet</td></tr>'; return; }
+    tbody.innerHTML = emails.map(e => `
+      <tr>
+        <td class="monospace">${e.address}</td>
+        <td><span class="badge badge-brand">${e.domain}</span></td>
+        <td>${e.owner || '<span class="text-muted">Anonymous</span>'}</td>
+        <td>${fmtDateTime(e.expires_at)}</td>
+      </tr>`).join('');
+  }
+
+  function renderRecentAudit(logs) {
+    const el = document.getElementById('recentAudit');
+    if (!logs.length) { el.innerHTML = '<p style="text-align:center;color:var(--text3);padding:24px 0">No activity yet</p>'; return; }
+    const icons = { login:'fa-sign-in-alt', register:'fa-user-plus', generate_email:'fa-envelope', delete_email:'fa-trash', login_fail:'fa-circle-xmark' };
+    const colors = { login:'rgba(16,185,129,0.15)', register:'rgba(59,130,246,0.15)', delete_email:'rgba(239,68,68,0.15)' };
+    el.innerHTML = logs.map(l => `
+      <div class="activity-item">
+        <div class="activity-icon" style="background:${colors[l.action]||'rgba(108,99,245,0.15)'}">
+          <i class="fas ${icons[l.action]||'fa-circle-info'}" style="color:#a78bfa;font-size:12px"></i>
+        </div>
+        <div>
+          <div class="activity-text">${l.action.replace(/_/g,' ')} ${l.user_email ? '· <span style="color:#a78bfa">'+l.user_email+'</span>' : ''}</div>
+          <div class="activity-time">${fmtDateTime(l.created_at)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderRecentUsers(users) {
+    const tbody = document.getElementById('recentUsers');
+    if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">No users yet</td></tr>'; return; }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td>${u.email}</td>
+        <td>${roleBadge(u.role)}</td>
+        <td>${statusBadge(u.status)}</td>
+        <td>${fmtDate(u.created_at)}</td>
+      </tr>`).join('');
+  }
+
+  if (initPage()) {
+    loadDashboard();
+    setInterval(loadDashboard, 60000); // auto-refresh every 60s
+  }
+</script>
+
+<style>
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+</style>
+</body>
+</html>
