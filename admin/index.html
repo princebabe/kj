@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TempMail Pro – Admin Login</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(108,99,245,.35) 0%, transparent 60%), var(--bg); }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="icon"><i class="fas fa-shield-halved"></i></div>
+        <span style="font-size:22px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent">TempMail Pro</span>
+      </div>
+      <h2 class="login-title">Admin Panel</h2>
+      <p class="login-sub">Sign in with your administrator credentials</p>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="search-wrap">
+            <i class="fas fa-envelope"></i>
+            <input class="form-control" id="email" type="email" placeholder="admin@tempmailpro.local" required style="padding-left:36px" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="search-wrap">
+            <i class="fas fa-lock"></i>
+            <input class="form-control" id="password" type="password" placeholder="••••••••" required style="padding-left:36px" />
+          </div>
+        </div>
+        <div id="errorMsg" style="display:none;color:#f87171;font-size:13px;margin-bottom:12px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.2)"></div>
+        <button type="submit" class="btn btn-primary w-full" id="loginBtn" style="width:100%;padding:12px;font-size:15px">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+        <a href="/" style="color:var(--text2);font-size:13px;text-decoration:none;hover:color:var(--text)">
+          <i class="fas fa-arrow-left" style="font-size:11px"></i> Back to TempMail Pro
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/admin.js"></script>
+  <script>
+    // If already logged in as admin, redirect to dashboard
+    if (getToken() && getUser() && ['admin','superadmin'].includes(getUser().role)) {
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('errorMsg');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+      err.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('email').value,
+            password: document.getElementById('password').value,
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        if (!['admin','superadmin'].includes(data.user.role)) {
+          throw new Error('Access denied: administrator role required');
+        }
+
+        setToken(data.token);
+        setUser(data.user);
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        err.textContent = error.message;
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

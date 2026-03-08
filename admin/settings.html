@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sc"></div>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>Settings</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">
+          <i class="fas fa-save"></i> Save All Settings
+        </button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="grid-2">
+        <!-- General Settings -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-sliders text-brand"></i> General</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Site Name</label>
+              <input class="form-control" id="s_site_name" type="text" placeholder="TempMail Pro" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Email</label>
+              <input class="form-control" id="s_contact_email" type="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email TTL (minutes)</label>
+              <input class="form-control" id="s_email_ttl_minutes" type="number" min="1" max="1440" />
+              <div class="form-note">How long a temporary email address stays active</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Max Emails per User</label>
+              <input class="form-control" id="s_max_emails_per_user" type="number" min="1" max="500" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Max Message Size (KB)</label>
+              <input class="form-control" id="s_max_message_size_kb" type="number" min="1" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Toggles -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-toggle-on text-brand"></i> Feature Toggles</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div class="flex-between">
+                <div>
+                  <div style="font-weight:600;font-size:14px">User Registration</div>
+                  <div class="form-note">Allow new accounts to register</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="s_allow_registration">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="flex-between">
+                <div>
+                  <div style="font-weight:600;font-size:14px">Maintenance Mode</div>
+                  <div class="form-note">Show maintenance page to visitors</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="s_maintenance_mode">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="flex-between">
+                <div>
+                  <div style="font-weight:600;font-size:14px">Spam Filter</div>
+                  <div class="form-note">Enable AI spam detection on incoming mail</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="s_spam_filter_enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Broadcast -->
+      <div class="card mt-6">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-bullhorn text-brand"></i> Broadcast Email</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input class="form-control" id="broadcastSubject" placeholder="Important announcement" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" id="broadcastMessage" rows="5" placeholder="Write your message here…" style="resize:vertical"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="sendBroadcast()">
+            <i class="fas fa-paper-plane"></i> Send to All Active Users
+          </button>
+        </div>
+      </div>
+
+      <!-- System Info -->
+      <div class="card mt-6">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-server text-brand"></i> System Information</div>
+        </div>
+        <div class="card-body">
+          <div class="grid-2" id="sysInfo">
+            <p style="color:var(--text3)">Loading system info…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/admin.js"></script>
+<script>
+  document.getElementById('sc').innerHTML = sb('settings');
+  initPage();
+
+  async function loadSettings() {
+    try {
+      const d = await GET('/api/admin/settings');
+      const s = {};
+      d.settings.forEach(row => { s[row.key] = row.value; });
+
+      const setInput = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = val === 'true';
+        else el.value = val || '';
+      };
+
+      setInput('s_site_name',          s.site_name);
+      setInput('s_contact_email',      s.contact_email);
+      setInput('s_email_ttl_minutes',  s.email_ttl_minutes);
+      setInput('s_max_emails_per_user',s.max_emails_per_user);
+      setInput('s_max_message_size_kb',s.max_message_size_kb);
+      setInput('s_allow_registration', s.allow_registration);
+      setInput('s_maintenance_mode',   s.maintenance_mode);
+      setInput('s_spam_filter_enabled',s.spam_filter_enabled);
+    } catch(e) { showToast('Failed to load settings: ' + e.message, 'error'); }
+  }
+
+  async function saveSettings() {
+    const getVal = id => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      return el.type === 'checkbox' ? String(el.checked) : el.value;
+    };
+    const updates = {
+      site_name:           getVal('s_site_name'),
+      contact_email:       getVal('s_contact_email'),
+      email_ttl_minutes:   getVal('s_email_ttl_minutes'),
+      max_emails_per_user: getVal('s_max_emails_per_user'),
+      max_message_size_kb: getVal('s_max_message_size_kb'),
+      allow_registration:  getVal('s_allow_registration'),
+      maintenance_mode:    getVal('s_maintenance_mode'),
+      spam_filter_enabled: getVal('s_spam_filter_enabled'),
+    };
+    try {
+      await PUT('/api/admin/settings', updates);
+      showToast('Settings saved successfully', 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function sendBroadcast() {
+    const subject = document.getElementById('broadcastSubject').value.trim();
+    const message = document.getElementById('broadcastMessage').value.trim();
+    if (!subject || !message) { showToast('Subject and message are required', 'error'); return; }
+    const ok = await showConfirm(`Send broadcast "<strong>${subject}</strong>" to all active users?`, 'Send Broadcast');
+    if (!ok) return;
+    try {
+      const d = await POST('/api/admin/broadcast', { subject, message });
+      showToast(`Broadcast sent to ${d.recipients} users`, 'success');
+      document.getElementById('broadcastSubject').value = '';
+      document.getElementById('broadcastMessage').value = '';
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function loadSysInfo() {
+    try {
+      const d = await GET('/api/admin/system');
+      const el = document.getElementById('sysInfo');
+      el.innerHTML = [
+        ['Node.js Version', d.node_version],
+        ['Platform',        d.platform],
+        ['Uptime',          Math.floor(d.uptime_seconds/60) + ' minutes'],
+        ['Memory Usage',    d.memory_mb + ' MB'],
+        ['Environment',     d.env],
+      ].map(([k,v]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span class="text-muted">${k}</span>
+          <span class="monospace" style="color:var(--text)">${v}</span>
+        </div>`).join('');
+    } catch(e) { /* non-superadmin */ }
+  }
+
+  function sb(a) {
+    const items = [['dashboard','fa-chart-pie','Dashboard','dashboard.html'],['users','fa-users','Users','users.html'],['emails','fa-envelope','Temp Emails','emails.html'],['messages','fa-inbox','Messages','messages.html'],['domains','fa-globe','Domains','domains.html'],['settings','fa-gear','Settings','settings.html'],['audit','fa-scroll','Audit Log','audit.html']];
+    return `<aside class="sidebar"><div class="sidebar-logo"><div class="icon"><i class="fas fa-shield-halved"></i></div><div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div></div><nav style="flex:1;overflow-y:auto"><div class="nav-section"><div class="nav-section-label">Navigation</div>${items.map(([id,icon,label,href])=>`<a href="${href}" class="nav-item ${a===id?'active':''}" ><i class="fas ${icon} icon"></i> ${label}</a>`).join('')}<a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a></div></nav><div class="sidebar-footer"><div class="sidebar-user" onclick="logout()"><div class="sidebar-avatar" id="sidebar-avatar">AD</div><div class="sidebar-user-info"><div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div><div class="role" id="sidebar-user-role">superadmin</div></div><i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i></div></div></aside>`;
+  }
+
+  loadSettings();
+  loadSysInfo();
+</script>
+</body>
+</html>

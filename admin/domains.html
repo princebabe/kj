@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Domain Management – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sc"></div>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>Domain Management</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('addModal')">
+          <i class="fas fa-plus"></i> Add Domain
+        </button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-globe text-brand"></i> Available Domains</div>
+          <span id="domainCount" class="badge badge-brand">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Domain</th><th>Status</th><th>Private</th><th>Email Count</th><th>Added</th><th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="domainsBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Domain Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-globe" style="color:#34d399;margin-right:8px"></i> Add Domain</h3>
+      <button class="modal-close" onclick="closeModal('addModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Domain Name *</label>
+      <input class="form-control" id="newDomain" type="text" placeholder="example.com" />
+      <div class="form-note">Enter only the domain (e.g. <code>mydomain.com</code>), without the @ symbol</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="newActive">
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Visibility</label>
+        <select class="form-control" id="newPrivate">
+          <option value="0">Public</option>
+          <option value="1">Private (API only)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addDomain()"><i class="fas fa-plus"></i> Add Domain</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/admin.js"></script>
+<script>
+  document.getElementById('sc').innerHTML = sb('domains');
+  initPage();
+
+  async function loadDomains() {
+    try {
+      const d = await GET('/api/admin/domains');
+      document.getElementById('domainCount').textContent = d.domains.length + ' total';
+      const tbody = document.getElementById('domainsBody');
+      if (!d.domains.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px">No domains found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = d.domains.map(dom => `
+        <tr>
+          <td>${dom.id}</td>
+          <td><span class="monospace" style="color:var(--text)">@${dom.name}</span></td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${dom.is_active?'checked':''} onchange="toggleDomain(${dom.id},'is_active',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            ${dom.is_active?'<span class="badge badge-success" style="margin-left:6px">Active</span>':'<span class="badge badge-gray" style="margin-left:6px">Inactive</span>'}
+          </td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${dom.is_private?'checked':''} onchange="toggleDomain(${dom.id},'is_private',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            ${dom.is_private?'<span class="badge badge-warning" style="margin-left:6px">Private</span>':'<span class="badge badge-brand" style="margin-left:6px">Public</span>'}
+          </td>
+          <td>${fmtNum(dom.email_count)}</td>
+          <td>${fmtDate(dom.created_at)}</td>
+          <td style="text-align:right">
+            <button class="btn btn-danger btn-xs" onclick="deleteDomain(${dom.id},'${dom.name}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>`).join('');
+    } catch(e) { showToast('Failed to load domains: ' + e.message, 'error'); }
+  }
+
+  async function toggleDomain(id, field, val) {
+    try {
+      await PATCH(`/api/admin/domains/${id}`, { [field]: val ? 1 : 0 });
+      showToast('Domain updated', 'success');
+    } catch(e) { showToast(e.message, 'error'); loadDomains(); }
+  }
+
+  async function addDomain() {
+    const name      = document.getElementById('newDomain').value.trim().toLowerCase();
+    const is_active = parseInt(document.getElementById('newActive').value);
+    const is_private= parseInt(document.getElementById('newPrivate').value);
+    if (!name) { showToast('Domain name is required', 'error'); return; }
+    try {
+      await POST('/api/admin/domains', { name, is_active, is_private });
+      closeModal('addModal');
+      showToast('Domain added successfully', 'success');
+      loadDomains();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function deleteDomain(id, name) {
+    const ok = await showConfirm(`Delete domain <strong>@${name}</strong>? All emails under this domain will also be deleted.`, 'Delete Domain');
+    if (!ok) return;
+    try {
+      await DELETE(`/api/admin/domains/${id}`);
+      showToast('Domain deleted', 'success');
+      loadDomains();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function sb(a) {
+    const items = [['dashboard','fa-chart-pie','Dashboard','dashboard.html'],['users','fa-users','Users','users.html'],['emails','fa-envelope','Temp Emails','emails.html'],['messages','fa-inbox','Messages','messages.html'],['domains','fa-globe','Domains','domains.html'],['settings','fa-gear','Settings','settings.html'],['audit','fa-scroll','Audit Log','audit.html']];
+    return `<aside class="sidebar"><div class="sidebar-logo"><div class="icon"><i class="fas fa-shield-halved"></i></div><div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div></div><nav style="flex:1;overflow-y:auto"><div class="nav-section"><div class="nav-section-label">Navigation</div>${items.map(([id,icon,label,href])=>`<a href="${href}" class="nav-item ${a===id?'active':''}" ><i class="fas ${icon} icon"></i> ${label}</a>`).join('')}<a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a></div></nav><div class="sidebar-footer"><div class="sidebar-user" onclick="logout()"><div class="sidebar-avatar" id="sidebar-avatar">AD</div><div class="sidebar-user-info"><div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div><div class="role" id="sidebar-user-role">superadmin</div></div><i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i></div></div></aside>`;
+  }
+
+  loadDomains();
+  setupModalClose('addModal');
+</script>
+</body>
+</html>

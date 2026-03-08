@@ -670,6 +670,31 @@ let activeMessageId = null;
 let spamFilter = true;
 let timerInterval = null;
 let timerSeconds = 30;
+const API = '/api'; // backend API base
+
+// ─── Backend API helpers ───────────────────────────────────────────────────────
+async function apiPost(path, body) {
+  try {
+    const r = await fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return await r.json();
+  } catch { return null; }
+}
+async function apiGet(path) {
+  try {
+    const r = await fetch(API + path);
+    return await r.json();
+  } catch { return null; }
+}
+async function apiDelete(path) {
+  try {
+    const r = await fetch(API + path, { method: 'DELETE' });
+    return await r.json();
+  } catch { return null; }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function randomWord(len) {
@@ -698,6 +723,45 @@ function setEmail(email, addToHistory=true) {
   resetTimer();
 }
 
+// ─── Backend-connected email generation ───────────────────────────────────────
+async function generateEmailFromBackend(username, domain) {
+  const body = {};
+  if (username) body.username = username;
+  if (domain)   body.domain   = domain;
+  const data = await apiPost('/emails/generate', body);
+  if (data && data.temp_email) return data.temp_email.address;
+  // Fallback to local generation if backend not available
+  return generateEmail(domain);
+}
+
+// ─── Load inbox from backend ───────────────────────────────────────────────────
+async function fetchInboxFromBackend(address) {
+  const spamParam = spamFilter ? '0' : '1';
+  const data = await apiGet(`/inbox/${encodeURIComponent(address)}?spam=${spamParam}`);
+  if (data && Array.isArray(data.messages)) {
+    return data.messages.map(m => ({
+      id:       m.id,
+      sender:   { name: m.from_name || m.from_address.split('@')[0], email: m.from_address, avatar: (m.from_name||m.from_address).substring(0,2).toUpperCase() },
+      subject:  m.subject,
+      body:     m.body_text || '(empty)',
+      preview:  (m.body_text || '(empty)').substring(0,80) + '…',
+      time:     relativeTime(m.received_at),
+      read:     !!m.is_read,
+      spam:     !!m.is_spam,
+    }));
+  }
+  return null;
+}
+
+function relativeTime(str) {
+  if (!str) return 'just now';
+  const d = new Date(str.includes('T') ? str : str.replace(' ','T')+'Z');
+  const diff = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (diff < 1)  return 'just now';
+  if (diff < 60) return diff + 'm ago';
+  return Math.floor(diff/60) + 'h ago';
+}
+
 function copyEmail() {
   if (!currentEmail) return;
   navigator.clipboard.writeText(currentEmail).then(()=>{
@@ -712,12 +776,13 @@ function copyEmail() {
   });
 }
 
-function refreshEmail() {
+async function refreshEmail() {
   const icon=document.getElementById('refreshIcon');
   icon.classList.add('refresh-spin');
   setTimeout(()=>icon.classList.remove('refresh-spin'),1000);
   const domain = currentEmail.split('@')[1];
-  setEmail(generateEmail(domain));
+  const newAddr = await generateEmailFromBackend(null, domain);
+  setEmail(newAddr);
   inboxMessages = [];
   renderInbox();
   showToast('New email address generated!','fa-rotate-right');
@@ -748,11 +813,12 @@ function searchEmails(q) {
   renderInbox(q.toLowerCase());
 }
 
-function applyUsername() {
+async function applyUsername() {
   const u=document.getElementById('customUsername').value.trim();
   const d=document.getElementById('domainSelect').value;
   if(!u){showToast('Please enter a username','fa-exclamation-circle');return;}
-  setEmail(u+'@'+d);
+  const newAddr = await generateEmailFromBackend(u, d);
+  setEmail(newAddr);
   closeModal('usernameModal');
   showToast('Username updated!','fa-circle-check');
 }
@@ -872,7 +938,18 @@ function addRandomEmail() {
   showToast('New email from '+msg.sender.name,'fa-envelope');
 }
 
-function refreshInbox() {
+async function refreshInbox() {
+  // Try to fetch real messages from backend
+  if (currentEmail) {
+    const msgs = await fetchInboxFromBackend(currentEmail);
+    if (msgs !== null) {
+      inboxMessages = msgs;
+      renderInbox();
+      showToast('Inbox refreshed!','fa-arrows-rotate');
+      return;
+    }
+  }
+  // Fallback: add demo messages
   addRandomEmail();
   addRandomEmail();
   showToast('Inbox refreshed!','fa-arrows-rotate');
@@ -1200,24 +1277,32 @@ function toggleDark() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-function init() {
-  // Generate initial email
-  const savedHistory=JSON.parse(localStorage.getItem('tmHistory')||'[]');
-  const email=savedHistory.length?savedHistory[0]:generateEmail();
-  setEmail(email, !savedHistory.includes(email));
-
-  // Render sections
+async function init() {
+  // Render sections immediately
   renderFeatures();
   renderTestimonials();
   renderBlog();
   renderFAQ();
   renderInbox();
 
-  // Seed with sample messages
-  setTimeout(()=>{
+  // Try to get email from history or generate via backend
+  const savedHistory = JSON.parse(localStorage.getItem('tmHistory') || '[]');
+  let email = savedHistory.length ? savedHistory[0] : null;
+
+  if (!email) {
+    email = await generateEmailFromBackend();
+  }
+  setEmail(email, !savedHistory.includes(email));
+
+  // Try to fetch real inbox from backend; fallback to demo messages
+  const backendMsgs = await fetchInboxFromBackend(email);
+  if (backendMsgs !== null) {
+    inboxMessages = backendMsgs;
+  } else {
+    // Seed with demo messages
     for(let i=0;i<3;i++) inboxMessages.push(makeMessage(Date.now()-i*1000));
-    renderInbox();
-  },1000);
+  }
+  renderInbox();
 
   // Observe stat counters
   document.querySelectorAll('[data-count]').forEach(el=>observer.observe(el));

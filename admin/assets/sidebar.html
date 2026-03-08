@@ -1,0 +1,66 @@
+<!-- Reusable admin sidebar HTML – injected by each admin page -->
+<script>
+function renderSidebar(activePage) {
+  const superAdmin = getUser()?.role === 'superadmin';
+  return `
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon"><i class="fas fa-shield-halved"></i></div>
+      <div>
+        <div class="brand">TempMail Pro</div>
+        <div class="sub">Admin Panel</div>
+      </div>
+    </div>
+
+    <nav style="flex:1;overflow-y:auto">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <a href="dashboard.html" class="nav-item ${activePage==='dashboard'?'active':''}">
+          <i class="fas fa-chart-pie icon"></i> Dashboard
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Management</div>
+        <a href="users.html" class="nav-item ${activePage==='users'?'active':''}">
+          <i class="fas fa-users icon"></i> Users
+        </a>
+        <a href="emails.html" class="nav-item ${activePage==='emails'?'active':''}">
+          <i class="fas fa-envelope icon"></i> Temp Emails
+        </a>
+        <a href="messages.html" class="nav-item ${activePage==='messages'?'active':''}">
+          <i class="fas fa-inbox icon"></i> Messages
+        </a>
+        <a href="domains.html" class="nav-item ${activePage==='domains'?'active':''}">
+          <i class="fas fa-globe icon"></i> Domains
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">System</div>
+        <a href="settings.html" class="nav-item ${activePage==='settings'?'active':''}">
+          <i class="fas fa-gear icon"></i> Settings
+        </a>
+        <a href="audit.html" class="nav-item ${activePage==='audit'?'active':''}">
+          <i class="fas fa-scroll icon"></i> Audit Log
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Links</div>
+        <a href="/" target="_blank" class="nav-item">
+          <i class="fas fa-arrow-up-right-from-square icon"></i> View Site
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="logout()">
+        <div class="sidebar-avatar" id="sidebar-avatar">AD</div>
+        <div class="sidebar-user-info">
+          <div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div>
+          <div class="role" id="sidebar-user-role">superadmin</div>
+        </div>
+        <i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i>
+      </div>
+    </div>
+  </aside>`;
+}
+</script>

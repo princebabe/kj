@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages – TempMail Pro Admin</title>
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="../assets/css/fontawesome.min.css" />
+  <style>body{font-family:'Inter',system-ui,sans-serif}</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sc"></div>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-icon" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        <h1>Message Management</h1>
+      </div>
+      <div class="topbar-right">
+        <select class="form-control" id="spamFilter" style="width:140px" onchange="loadMessages()">
+          <option value="">All Messages</option>
+          <option value="0">Non-Spam</option>
+          <option value="1">Spam Only</option>
+        </select>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px">
+          <div class="search-wrap">
+            <i class="fas fa-magnifying-glass"></i>
+            <input class="form-control" id="searchInput" placeholder="Search by subject or sender…" oninput="debounce(loadMessages,400)()" style="padding-left:36px" />
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-inbox text-brand"></i> All Messages</div>
+          <span id="totalCount" class="badge badge-brand">0 total</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>From</th><th>Subject</th><th>Inbox</th><th>Spam</th><th>Read</th><th>Received</th><th style="text-align:right">Actions</th></tr>
+            </thead>
+            <tbody id="messagesBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/admin.js"></script>
+<script>
+  document.getElementById('sc').innerHTML = sb('messages');
+  initPage();
+  let currentPage = 1, debounceTimer;
+  function debounce(fn,d){return function(...a){clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>fn(...a),d);}}
+
+  async function loadMessages(page = currentPage) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value;
+    const spam   = document.getElementById('spamFilter').value;
+    const params = new URLSearchParams({ page, limit:25, search, ...(spam!==''?{spam}:{}) });
+    try {
+      const d = await GET(`/api/admin/messages?${params}`);
+      document.getElementById('totalCount').textContent = d.total + ' total';
+      const tbody = document.getElementById('messagesBody');
+      if (!d.messages.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">No messages found</td></tr>';
+      } else {
+        tbody.innerHTML = d.messages.map(m => `
+          <tr>
+            <td>${m.id}</td>
+            <td class="monospace text-muted">${m.from_address}</td>
+            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.subject}</td>
+            <td class="monospace text-muted">${m.inbox}</td>
+            <td>${m.is_spam ? '<span class="badge badge-warning">Spam</span>' : '<span class="badge badge-success">Clean</span>'}</td>
+            <td>${m.is_read ? '<span class="badge badge-gray">Read</span>' : '<span class="badge badge-info">Unread</span>'}</td>
+            <td>${fmtDateTime(m.received_at)}</td>
+            <td style="text-align:right">
+              <button class="btn btn-danger btn-xs" onclick="deleteMessage(${m.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>`).join('');
+      }
+      const pEl = document.getElementById('pagination');
+      pEl.innerHTML = '';
+      pEl.appendChild(buildPagination(page, d.total, 25, loadMessages));
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+  }
+
+  async function deleteMessage(id) {
+    const ok = await showConfirm('Delete this message permanently?', 'Delete Message');
+    if (!ok) return;
+    try {
+      await DELETE(`/api/admin/messages/${id}`);
+      showToast('Message deleted', 'success');
+      loadMessages();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function sb(a) {
+    const items = [['dashboard','fa-chart-pie','Dashboard','dashboard.html'],['users','fa-users','Users','users.html'],['emails','fa-envelope','Temp Emails','emails.html'],['messages','fa-inbox','Messages','messages.html'],['domains','fa-globe','Domains','domains.html'],['settings','fa-gear','Settings','settings.html'],['audit','fa-scroll','Audit Log','audit.html']];
+    return `<aside class="sidebar"><div class="sidebar-logo"><div class="icon"><i class="fas fa-shield-halved"></i></div><div><div class="brand">TempMail Pro</div><div class="sub">Admin Panel</div></div></div><nav style="flex:1;overflow-y:auto"><div class="nav-section"><div class="nav-section-label">Navigation</div>${items.map(([id,icon,label,href])=>`<a href="${href}" class="nav-item ${a===id?'active':''}" ><i class="fas ${icon} icon"></i> ${label}</a>`).join('')}<a href="/" target="_blank" class="nav-item"><i class="fas fa-arrow-up-right-from-square icon"></i> View Site</a></div></nav><div class="sidebar-footer"><div class="sidebar-user" onclick="logout()"><div class="sidebar-avatar" id="sidebar-avatar">AD</div><div class="sidebar-user-info"><div class="name truncate" id="sidebar-user-name" style="max-width:140px">admin</div><div class="role" id="sidebar-user-role">superadmin</div></div><i class="fas fa-sign-out-alt text-muted" style="margin-left:auto;font-size:13px"></i></div></div></aside>`;
+  }
+
+  loadMessages();
+</script>
+</body>
+</html>
