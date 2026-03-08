@@ -42,7 +42,14 @@
         </button>
       </form>
 
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+      <div id="devCredentials" style="display:none;margin-top:16px;padding:12px 14px;background:rgba(108,99,245,0.08);border:1px solid rgba(108,99,245,0.25);border-radius:10px;font-size:12.5px;color:var(--text2);line-height:1.7">
+        <strong style="color:var(--text);display:block;margin-bottom:4px"><i class="fas fa-info-circle" style="color:#6c63f5"></i> Default credentials</strong>
+        <span><b>Email:</b> admin@tempmailpro.local</span><br/>
+        <span><b>Password:</b> Admin@1234!</span><br/>
+        <span style="font-size:11px;opacity:.75">(Set via <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> in <code>.env</code>, then run <code>node seed.js</code>)</span>
+      </div>
+
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
         <a href="/" style="color:var(--text2);font-size:13px;text-decoration:none;hover:color:var(--text)">
           <i class="fas fa-arrow-left" style="font-size:11px"></i> Back to TempMail Pro
         </a>
@@ -52,6 +59,12 @@
 
   <script src="assets/admin.js"></script>
   <script>
+    // Show default credentials hint only on localhost (development)
+    const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    if (isLocalhost) {
+      document.getElementById('devCredentials').style.display = 'block';
+    }
+
     // If already logged in as admin, redirect to dashboard
     if (getToken() && getUser() && ['admin','superadmin'].includes(getUser().role)) {
       window.location.href = 'dashboard.html';
